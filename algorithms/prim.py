@@ -1,4 +1,5 @@
 import heapq
+import itertools
 from dataclasses import dataclass
 from typing import List
 
@@ -23,12 +24,14 @@ def prim(graph: Graph, start=None, criterion="distance"):
     visited = {start}
 
     heap = []
+    counter = itertools.count()  
 
     for edge in graph.neighbors(start):
         heapq.heappush(
             heap,
             (
                 edge.get_weight(criterion),
+                next(counter),
                 edge,
             ),
         )
@@ -39,7 +42,7 @@ def prim(graph: Graph, start=None, criterion="distance"):
 
     while heap and len(visited) < graph.num_stations():
 
-        cost, edge = heapq.heappop(heap)
+        cost, _tie, edge = heapq.heappop(heap)
 
         if edge.destination in visited:
             continue
@@ -58,6 +61,7 @@ def prim(graph: Graph, start=None, criterion="distance"):
                     heap,
                     (
                         nxt.get_weight(criterion),
+                        next(counter),
                         nxt,
                     ),
                 )
