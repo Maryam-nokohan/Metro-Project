@@ -19,6 +19,7 @@ from algorithms.max_flow import max_flow
 from algorithms.articulation import find_articulation_points_and_bridges
 from algorithms.dominating_set import greedy_dominating_set, is_valid_dominating_set
 from algorithms.levenshtein import levenshtein_distance, find_closest_station
+from algorithms.bidirectional_dijkstra import bidirectional_dijkstra, compare_expanded_nodes
 
 __all__ = [
     "bfs_traversal",
@@ -48,4 +49,6 @@ __all__ = [
     "is_valid_dominating_set",
     "levenshtein_distance",
     "find_closest_station",
+    "bidirectional_dijkstra",
+    "compare_expanded_nodes",
 ]
