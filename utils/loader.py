@@ -56,3 +56,36 @@ def build_graph_from_files(
         )
 
     return graph
+
+
+def load_capacities(path: str) -> List[tuple]:
+
+    capacities = []
+    for line_number, line in enumerate(_read_non_comment_lines(path), start=1):
+        parts = [p.strip() for p in line.split("|")]
+        if len(parts) != 3:
+            raise ValueError(
+                f"فرمت نامعتبر در {path} خط {line_number}: {line!r} "
+                f"(باید ۳ فیلد با جداکننده '|' داشته باشد)"
+            )
+        source, destination, capacity_str = parts
+        try:
+            capacity = float(capacity_str)
+        except ValueError as exc:
+            raise ValueError(
+                f"مقدار ظرفیت نامعتبر در {path} خط {line_number}: {line!r}"
+            ) from exc
+        capacities.append((source, destination, capacity))
+    return capacities
+
+
+def apply_capacities_from_file(graph: Graph, path: str) -> None:
+
+    for source, destination, capacity in load_capacities(path):
+        forward_edge = graph.get_edge(source, destination)
+        if forward_edge is not None:
+            forward_edge.capacity = capacity
+
+        backward_edge = graph.get_edge(destination, source)
+        if backward_edge is not None:
+            backward_edge.capacity = capacity

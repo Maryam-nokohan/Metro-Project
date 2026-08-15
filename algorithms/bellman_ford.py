@@ -30,42 +30,42 @@ def bellman_ford(
 
         updated = False
 
-        for edge in graph.edges():
+        for u in graph.station_ids():
+            for edge in graph.neighbors(u):
 
-            u = edge.source
-            v = edge.destination
+                v = edge.destination
 
-            w = edge.get_weight(criterion)
+                w = edge.get_weight(criterion)
 
-            if dist[u] == float("inf"):
-                continue
+                if dist[u] == float("inf"):
+                    continue
 
-            if dist[u] + w < dist[v]:
+                if dist[u] + w < dist[v]:
 
-                dist[v] = dist[u] + w
+                    dist[v] = dist[u] + w
 
-                parent[v] = u
+                    parent[v] = u
 
-                updated = True
+                    updated = True
 
         if not updated:
             break
 
     negative_cycle = []
 
-    for edge in graph.edges():
+    for u in graph.station_ids():
+        for edge in graph.neighbors(u):
 
-        u = edge.source
-        v = edge.destination
+            v = edge.destination
 
-        w = edge.get_weight(criterion)
+            w = edge.get_weight(criterion)
 
-        if dist[u] != float("inf"):
+            if dist[u] != float("inf"):
 
-            if dist[u] + w < dist[v]:
+                if dist[u] + w < dist[v]:
 
-                negative_cycle.append(
-                    (u, v)
-                )
+                    negative_cycle.append(
+                        (u, v)
+                    )
 
     return dist, parent, negative_cycle
