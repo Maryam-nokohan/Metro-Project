@@ -1,14 +1,4 @@
 """
-tests/test_daily_operations.py
---------------------------------
-تست‌های واحد برای دور سوم پروژه (عملیات‌های روزانه‌ی مترو):
-    TestIntervalScheduling : T3.1 - تخصیص بیشینه‌ی قطارها به یک سکو
-    TestPriorityQueue       : زیرساخت عمومی مورد استفاده در T3.2
-    TestTrainDispatchQueue  : T3.2 - مدیریت صف اعزام قطارها
-    TestOperationsLog       : T3.3 - تحلیل داده‌های بهره‌برداری
-    TestGateSimulator       : T3.4 - شبیه‌سازی ورود مسافران
-
-اجرا از ریشه‌ی پروژه:
     python3 -m unittest tests/test_daily_operations.py -v
 """
 
@@ -21,13 +11,9 @@ from utils.priority_queue import PriorityQueue
 from utils.analytics import OperationsLog
 from simulation.passenger_simulator import GateSimulator
 
-
-# ======================================================================
-# T3.1 - Interval Scheduling
-# ======================================================================
 class TestIntervalScheduling(unittest.TestCase):
     def test_classic_overlap_example(self):
-        # سه قطار کاملاً هم‌پوشان؛ فقط یکی قابل انتخاب است
+
         trains = [
             Train("T1", arrival_time=0, departure_time=10),
             Train("T2", arrival_time=2, departure_time=8),
@@ -46,9 +32,7 @@ class TestIntervalScheduling(unittest.TestCase):
         self.assertEqual(len(selected), 3)
 
     def test_greedy_picks_maximum_not_just_any(self):
-        # این نمونه‌ی کلاسیک است که در آن انتخاب حریصانه‌ی نادرست
-        # (مثلاً بر اساس کوتاه‌ترین بازه) جواب غلط می‌دهد، ولی مرتب‌سازی
-        # بر اساس departure_time جواب درست (۴ قطار) را می‌دهد.
+
         trains = [
             Train("A", 1, 4),
             Train("B", 3, 5),
@@ -63,15 +47,13 @@ class TestIntervalScheduling(unittest.TestCase):
             Train("K", 12, 16),
         ]
         selected = select_max_trains(trains)
-        self.assertEqual(len(selected), 4)  # A, B/D, G/F, K (بهینه ۴ تاست)
+        self.assertEqual(len(selected), 4) 
 
     def test_empty_input(self):
         self.assertEqual(select_max_trains([]), [])
 
 
-# ======================================================================
-# PriorityQueue (زیرساخت عمومی T3.2)
-# ======================================================================
+
 class TestPriorityQueue(unittest.TestCase):
     def test_pop_returns_highest_priority_first(self):
         pq = PriorityQueue()
@@ -118,9 +100,7 @@ class TestPriorityQueue(unittest.TestCase):
         self.assertEqual(priority, 99)
 
 
-# ======================================================================
-# T3.2 - TrainDispatchQueue
-# ======================================================================
+
 class TestTrainDispatchQueue(unittest.TestCase):
     def test_more_delayed_train_dispatched_first(self):
         q = TrainDispatchQueue()
@@ -158,9 +138,7 @@ class TestTrainDispatchQueue(unittest.TestCase):
         self.assertEqual(len(q), 1)
 
 
-# ======================================================================
-# T3.3 - OperationsLog
-# ======================================================================
+
 class TestOperationsLog(unittest.TestCase):
     def setUp(self):
         self.log = OperationsLog()
@@ -170,7 +148,7 @@ class TestOperationsLog(unittest.TestCase):
         self.log.record_trip("2026-08-02", "Station-C", 200)
 
     def test_average_daily_trips(self):
-        # روز ۱: ۱۰۰+۵۰=۱۵۰   روز ۲: ۸۰+۲۰۰=۲۸۰   میانگین = ۲۱۵
+        
         self.assertAlmostEqual(self.log.average_daily_trips(), 215.0)
 
     def test_average_daily_trips_empty_log(self):
@@ -178,7 +156,7 @@ class TestOperationsLog(unittest.TestCase):
         self.assertEqual(empty_log.average_daily_trips(), 0.0)
 
     def test_kth_busiest_station(self):
-        # مجموع کل: A=180, B=50, C=200  ->  ترتیب نزولی: C(200), A(180), B(50)
+        
         self.assertEqual(self.log.kth_busiest_station(1), ("Station-C", 200))
         self.assertEqual(self.log.kth_busiest_station(2), ("Station-A", 180))
         self.assertEqual(self.log.kth_busiest_station(3), ("Station-B", 50))
@@ -188,9 +166,7 @@ class TestOperationsLog(unittest.TestCase):
         self.assertIsNone(self.log.kth_busiest_station(100))
 
 
-# ======================================================================
-# T3.4 - GateSimulator
-# ======================================================================
+
 class TestGateSimulator(unittest.TestCase):
     def test_generate_arrivals_within_duration_and_sorted(self):
         sim = GateSimulator(num_gates=2, seed=42)
@@ -217,8 +193,8 @@ class TestGateSimulator(unittest.TestCase):
         result = sim.simulate(passengers)
 
         self.assertEqual(result[0].service_start_time, 0)
-        self.assertEqual(result[0].service_end_time, 1)  # ۶۰ ثانیه = ۱ دقیقه
-        # مسافر دوم باید منتظر بماند تا مسافر اول تمام شود (گیت یکی است)
+        self.assertEqual(result[0].service_end_time, 1)  
+        
         self.assertEqual(result[1].service_start_time, 1)
 
     def test_more_gates_reduce_average_waiting_time(self):
