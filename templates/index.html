@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>سامانه مدیریت و مسیریابی متروی قم</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom Gradient Palette: #a47451 -> #9c9881 -> #73a09d -> #3b899a -> #095b79 -> #002847 -> #000116 */
+        body {
+            background: linear-gradient(135deg, #a47451, #9c9881, #73a09d, #3b899a, #095b79, #002847, #000116);
+            background-attachment: fixed;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body class="text-slate-100 min-h-screen pb-12">
+
+    <!-- Top Navigation Header -->
+    <header class="bg-black/30 backdrop-blur-md border-b border-white/10 sticky top-0 z-50">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between">
+            <h1 class="text-xl font-bold tracking-wide">سامانه مسیریابی متروی قم</h1>
+            <span class="text-sm bg-white/10 px-3 py-1 rounded-full text-slate-300">UrbanPulse Technical Study</span>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-6 mt-8 grid grid-cols-1 md:grid-cols-3 gap-6">
+
+        <!-- Navigation Sidebar Menu -->
+        <aside class="bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-5 space-y-3 h-fit">
+            <h2 class="text-lg font-semibold text-slate-200 mb-4 border-b border-white/10 pb-2">قابلیت‌های سیستم</h2>
+            <button onclick="switchTab('routing')" class="w-full text-right px-4 py-3 rounded-xl bg-white/10 hover:bg-white/20 transition duration-200">
+                🗺️ مسیریابی و بررسی دسترسی
+            </button>
+            <button onclick="switchTab('mst')" class="w-full text-right px-4 py-3 rounded-xl bg-white/5 hover:bg-white/20 transition duration-200">
+                🌐 تحلیل کم‌هزینه‌ترین شبکه (MST)
+            </button>
+            <button onclick="switchTab('analysis')" class="w-full text-right px-4 py-3 rounded-xl bg-white/5 hover:bg-white/20 transition duration-200">
+                🚨 شناسایی ایستگاه‌های بحرانی
+            </button>
+            <button onclick="switchTab('search')" class="w-full text-right px-4 py-3 rounded-xl bg-white/5 hover:bg-white/20 transition duration-200">
+                🔍 جستجوی تایپی‌تحمل‌پذیر
+            </button>
+        </aside>
+
+        <!-- Main Display Panel -->
+        <section class="md:col-span-2 bg-black/20 backdrop-blur-lg border border-white/10 rounded-2xl p-6">
+
+            <!-- Tab 1: Routing & Reachability -->
+            <div id="tab-routing" class="tab-content space-y-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3">مسیریابی بین دو ایستگاه</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm mb-2">ایستگاه مبدأ</label>
+                        <select id="start-station" class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                            <!-- Options injected dynamically -->
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm mb-2">ایستگاه مقصد</label>
+                        <select id="goal-station" class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white focus:outline-none focus:ring-2 focus:ring-teal-400">
+                            <!-- Options injected dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm mb-2">معیار بهینه‌سازی</label>
+                    <select id="criterion" class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white">
+                        <option value="distance">فاصله (کیلومتر)</option>
+                        <option value="time">زمان (دقیقه)</option>
+                    </select>
+                </div>
+
+                <div class="flex gap-4">
+                    <button onclick="fetchShortestPath()" class="flex-1 bg-teal-600 hover:bg-teal-500 font-semibold py-3 rounded-xl transition duration-200">
+                        محاسبه کوتاه‌ترین مسیر (Dijkstra)
+                    </button>
+                    <button onclick="fetchReachability()" class="flex-1 bg-slate-700 hover:bg-slate-600 font-semibold py-3 rounded-xl transition duration-200">
+                        بررسی دسترسی‌پذیری (BFS/DFS)
+                    </button>
+                </div>
+
+                <div id="routing-results" class="hidden bg-black/30 border border-white/10 rounded-xl p-4 mt-4 space-y-2"></div>
+            </div>
+
+            <!-- Tab 2: MST -->
+            <div id="tab-mst" class="tab-content hidden space-y-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3">تحلیل کم‌هزینه‌ترین شبکه (Kruskal & Prim)</h3>
+                <button onclick="fetchMST()" class="bg-teal-600 hover:bg-teal-500 font-semibold px-6 py-3 rounded-xl transition duration-200">
+                    محاسبه درخت پوشای کمینه
+                </button>
+                <div id="mst-results" class="bg-black/30 border border-white/10 rounded-xl p-4 mt-4 space-y-2"></div>
+            </div>
+
+            <!-- Tab 3: Analysis & Critical Points -->
+            <div id="tab-analysis" class="tab-content hidden space-y-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3">شناسایی نقاط برشی و مسیرهای بحرانی</h3>
+                <button onclick="fetchCriticalNodes()" class="bg-teal-600 hover:bg-teal-500 font-semibold px-6 py-3 rounded-xl transition duration-200">
+                    تحلیل ایستگاه‌ها و پل‌های بحرانی
+                </button>
+                <div id="analysis-results" class="bg-black/30 border border-white/10 rounded-xl p-4 mt-4 space-y-2"></div>
+            </div>
+
+            <!-- Tab 4: Typo Search -->
+            <div id="tab-search" class="tab-content hidden space-y-6">
+                <h3 class="text-xl font-bold border-b border-white/10 pb-3">جستجوی هوشمند نام ایستگاه (Levenshtein)</h3>
+                <input type="text" id="search-query" placeholder="نام ایستگاه را وارد کنید..." class="w-full bg-slate-800/80 border border-white/20 rounded-xl p-3 text-white">
+                <button onclick="fetchSearch()" class="bg-teal-600 hover:bg-teal-500 font-semibold px-6 py-3 rounded-xl transition duration-200">
+                    جستجو
+                </button>
+                <div id="search-results" class="bg-black/30 border border-white/10 rounded-xl p-4 mt-4 space-y-2"></div>
+            </div>
+
+        </section>
+    </main>
+
+    <script>
+        // Tab Switcher logic
+        function switchTab(tabName) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+            document.getElementById(`tab-${tabName}`).classList.remove('hidden');
+        }
+
+        // Populate Stations on Load
+        async function loadStations() {
+            const res = await fetch('/api/stations');
+            const data = await res.json();
+            const startSelect = document.getElementById('start-station');
+            const goalSelect = document.getElementById('goal-station');
+
+            data.stations.forEach(station => {
+                startSelect.innerHTML += `<option value="${station}">${station}</option>`;
+                goalSelect.innerHTML += `<option value="${station}">${station}</option>`;
+            });
+        }
+
+        async function fetchShortestPath() {
+            const start = document.getElementById('start-station').value;
+            const goal = document.getElementById('goal-station').value;
+            const criterion = document.getElementById('criterion').value;
+
+            const res = await fetch('/api/shortest-path', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ start, goal, criterion })
+            });
+            const data = await res.json();
+
+            const resDiv = document.getElementById('routing-results');
+            resDiv.classList.remove('hidden');
+
+            if (!data.path) {
+                resDiv.innerHTML = `<p class="text-red-400">❌ مسیری بین این دو ایستگاه یافت نشد.</p>`;
+            } else {
+                const unit = criterion === 'distance' ? 'کیلومتر' : 'دقیقه';
+                resDiv.innerHTML = `
+                    <p class="font-semibold text-teal-300">✅ کوتاه‌ترین مسیر:</p>
+                    <p class="text-slate-200">${data.path.join(' ➔ ')}</p>
+                    <p class="text-sm text-slate-400 mt-2">هزینه کل: ${data.cost.toFixed(2)} ${unit}</p>
+                `;
+            }
+        }
+
+        async function fetchReachability() {
+            const start = document.getElementById('start-station').value;
+            const goal = document.getElementById('goal-station').value;
+
+            const res = await fetch('/api/reachability', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({ start, goal })
+            });
+            const data = await res.json();
+
+            const resDiv = document.getElementById('routing-results');
+            resDiv.classList.remove('hidden');
+
+            if (!data.bfs_path) {
+                resDiv.innerHTML = `<p class="text-red-400">❌ هیچ مسیری بین این دو ایستگاه وجود ندارد.</p>`;
+            } else {
+                resDiv.innerHTML = `
+                    <p class="font-semibold text-teal-300">✅ مسیر دسترسی وجود دارد.</p>
+                    <p class="text-sm mt-1"><b>مسیر با BFS:</b> ${data.bfs_path.join(' ➔ ')}</p>
+                    <p class="text-sm mt-1"><b>مسیر با DFS:</b> ${data.dfs_path.join(' ➔ ')}</p>
+                `;
+            }
+        }
+
+        async function fetchMST() {
+            const res = await fetch('/api/mst');
+            const data = await res.json();
+            const resDiv = document.getElementById('mst-results');
+            resDiv.innerHTML = `
+                <p><b>هزینه کل Kruskal:</b> ${data.kruskal_cost.toFixed(2)}</p>
+                <p><b>هزینه کل Prim:</b> ${data.prim_cost.toFixed(2)}</p>
+                <p class="mt-2 font-semibold">یال‌های منتخب:</p>
+                <ul class="list-disc pr-5 text-sm space-y-1">
+                    ${data.edges.map(e => `<li>${e.source} ↔ ${e.destination} (${e.weight})</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        async function fetchCriticalNodes() {
+            const res = await fetch('/api/critical-nodes');
+            const data = await res.json();
+            const resDiv = document.getElementById('analysis-results');
+            resDiv.innerHTML = `
+                <p class="font-semibold text-amber-300">ایستگاه‌های بحرانی (نقاط برشی):</p>
+                <p class="text-sm">${data.points.join(', ') || 'هیچ'}</p>
+                <p class="font-semibold text-amber-300 mt-3">مسیرهای بحرانی (پل‌ها):</p>
+                <ul class="list-disc pr-5 text-sm">
+                    ${data.bridges.map(b => `<li>${b[0]} ↔ ${b[1]}</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        async function fetchSearch() {
+            const q = document.getElementById('search-query').value;
+            const res = await fetch(`/api/search?q=${encodeURIComponent(q)}`);
+            const data = await res.json();
+            const resDiv = document.getElementById('search-results');
+            resDiv.innerHTML = `
+                <p class="font-semibold">نزدیک‌ترین نتایج:</p>
+                <ul class="list-disc pr-5 text-sm">
+                    ${data.results.map(r => `<li>${r.name} (فاصله ویرایشی: ${r.distance})</li>`).join('')}
+                </ul>
+            `;
+        }
+
+        window.onload = loadStations;
+    </script>
+</body>
+</html>
