@@ -28,7 +28,6 @@ def kruskal(graph: Graph, criterion="distance") -> MSTResult:
     total = 0
 
     for edge in edges:
-
         if ds.union(edge.source, edge.destination):
             mst.append(edge)
             total += edge.get_weight(criterion)

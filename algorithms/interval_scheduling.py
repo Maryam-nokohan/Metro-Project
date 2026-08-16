@@ -4,7 +4,7 @@ from models.train import Train
 
 
 def select_max_trains(trains: List[Train]) -> List[Train]:
-  
+
     sorted_trains = sorted(trains, key=lambda t: t.departure_time)
 
     selected: List[Train] = []

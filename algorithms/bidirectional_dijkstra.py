@@ -9,7 +9,7 @@ def _build_reverse_adjacency(graph: Graph) -> Dict[str, list]:
 
     reverse: Dict[str, list] = defaultdict(list)
     for station_id in graph.station_ids():
-        reverse[station_id] 
+        reverse[station_id]
 
     for edge in graph.edges():
         reverse[edge.destination].append(edge)
@@ -22,7 +22,7 @@ def _build_reverse_adjacency(graph: Graph) -> Dict[str, list]:
 def bidirectional_dijkstra(
     graph: Graph, source_id: str, target_id: str, criterion: str = "distance"
 ) -> Tuple[Optional[List[str]], float, int]:
-  
+
     if not graph.has_station(source_id) or not graph.has_station(target_id):
         return None, float("inf"), 0
 
@@ -62,7 +62,7 @@ def bidirectional_dijkstra(
     def _relax_backward(u: str) -> None:
         nonlocal best, meeting_node
         for edge in reverse_adjacency[u]:
-            v = edge.source 
+            v = edge.source
             weight = edge.get_weight(criterion)
             new_dist = dist_b[u] + weight
             if v not in dist_b or new_dist < dist_b[v]:
@@ -76,7 +76,7 @@ def bidirectional_dijkstra(
 
     while pq_f and pq_b:
         if pq_f[0][0] + pq_b[0][0] >= best:
-            break 
+            break
 
         if pq_f[0][0] <= pq_b[0][0]:
             d_u, u = heapq.heappop(pq_f)
@@ -103,7 +103,6 @@ def bidirectional_dijkstra(
 
     if meeting_node is None:
         return None, float("inf"), expanded_nodes
-
 
     forward_part = [meeting_node]
     node = meeting_node
@@ -164,7 +163,7 @@ def _dijkstra_early_stopping(
 def compare_expanded_nodes(
     graph: Graph, source_id: str, target_id: str, criterion: str = "distance"
 ) -> Dict[str, object]:
- 
+
     uni_path, uni_cost, uni_expanded = _dijkstra_early_stopping(
         graph, source_id, target_id, criterion
     )
@@ -173,7 +172,15 @@ def compare_expanded_nodes(
     )
 
     return {
-        "unidirectional": {"path": uni_path, "cost": uni_cost, "expanded_nodes": uni_expanded},
-        "bidirectional": {"path": bi_path, "cost": bi_cost, "expanded_nodes": bi_expanded},
+        "unidirectional": {
+            "path": uni_path,
+            "cost": uni_cost,
+            "expanded_nodes": uni_expanded,
+        },
+        "bidirectional": {
+            "path": bi_path,
+            "cost": bi_cost,
+            "expanded_nodes": bi_expanded,
+        },
         "costs_match": uni_cost == bi_cost,
     }

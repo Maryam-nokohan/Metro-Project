@@ -7,7 +7,6 @@ from algorithms.prim import prim
 
 
 class TestMST(unittest.TestCase):
-
     def setUp(self):
 
         self.g = Graph()

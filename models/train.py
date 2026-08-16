@@ -7,8 +7,6 @@ from utils.priority_queue import PriorityQueue
 
 @dataclass
 class Train:
-
-
     train_id: str
     arrival_time: float
     departure_time: float
@@ -16,14 +14,17 @@ class Train:
     is_emergency: bool = False
 
     def overlaps(self, other: "Train") -> bool:
-  
-        return self.arrival_time < other.departure_time and other.arrival_time < self.departure_time
+
+        return (
+            self.arrival_time < other.departure_time
+            and other.arrival_time < self.departure_time
+        )
 
     def priority_score(self) -> float:
- 
+
         score = float(self.delay_minutes)
         if self.is_emergency:
-            score += 1_000_000.0 
+            score += 1_000_000.0
         return score
 
     def __repr__(self) -> str:
@@ -35,13 +36,12 @@ class Train:
 
 
 class TrainDispatchQueue:
-
     def __init__(self) -> None:
         self._queue: PriorityQueue = PriorityQueue()
         self._trains: dict[str, Train] = {}
 
     def add_train(self, train: Train) -> None:
-        
+
         self._trains[train.train_id] = train
         self._queue.push(train.train_id, train, train.priority_score())
 
@@ -60,7 +60,7 @@ class TrainDispatchQueue:
         return train
 
     def peek_next(self) -> Optional[Train]:
-    
+
         if self._queue.is_empty():
             return None
         _train_id, train, _priority = self._queue.peek()

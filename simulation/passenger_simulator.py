@@ -6,7 +6,6 @@ from models.passenger import Passenger
 
 
 class GateSimulator:
-
     def __init__(
         self,
         num_gates: int,
@@ -22,7 +21,7 @@ class GateSimulator:
     def generate_arrivals(
         self, duration_minutes: float, avg_arrivals_per_minute: float
     ) -> List[Passenger]:
-  
+
         if avg_arrivals_per_minute <= 0:
             return []
 
@@ -35,13 +34,15 @@ class GateSimulator:
             current_time += interarrival
             if current_time >= duration_minutes:
                 break
-            passengers.append(Passenger(passenger_id=next_id, arrival_time=current_time))
+            passengers.append(
+                Passenger(passenger_id=next_id, arrival_time=current_time)
+            )
             next_id += 1
 
         return passengers
 
     def simulate(self, passengers: List[Passenger]) -> List[Passenger]:
-    
+
         gate_free_at = [0.0] * self.num_gates
 
         for passenger in sorted(passengers, key=lambda p: p.arrival_time):

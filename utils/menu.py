@@ -25,7 +25,9 @@ def prompt_choice(max_option: int) -> int:
         print(f"❌ لطفاً عددی بین 0 تا {max_option} وارد کنید.")
 
 
-def choose_station(graph: Graph, prompt: str = "یک ایستگاه انتخاب کنید") -> Optional[str]:
+def choose_station(
+    graph: Graph, prompt: str = "یک ایستگاه انتخاب کنید"
+) -> Optional[str]:
 
     station_ids = graph.station_ids()
     print(f"\n{prompt} (برای انصراف 0 را بزنید):")

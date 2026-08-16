@@ -1,5 +1,5 @@
 """
-    python3 -m unittest tests/test_daily_operations.py -v
+python3 -m unittest tests/test_daily_operations.py -v
 """
 
 import unittest
@@ -10,6 +10,7 @@ from algorithms.interval_scheduling import select_max_trains
 from utils.priority_queue import PriorityQueue
 from utils.analytics import OperationsLog
 from simulation.passenger_simulator import GateSimulator
+
 
 class TestIntervalScheduling(unittest.TestCase):
     def test_classic_overlap_example(self):
@@ -47,11 +48,10 @@ class TestIntervalScheduling(unittest.TestCase):
             Train("K", 12, 16),
         ]
         selected = select_max_trains(trains)
-        self.assertEqual(len(selected), 4) 
+        self.assertEqual(len(selected), 4)
 
     def test_empty_input(self):
         self.assertEqual(select_max_trains([]), [])
-
 
 
 class TestPriorityQueue(unittest.TestCase):
@@ -100,7 +100,6 @@ class TestPriorityQueue(unittest.TestCase):
         self.assertEqual(priority, 99)
 
 
-
 class TestTrainDispatchQueue(unittest.TestCase):
     def test_more_delayed_train_dispatched_first(self):
         q = TrainDispatchQueue()
@@ -138,7 +137,6 @@ class TestTrainDispatchQueue(unittest.TestCase):
         self.assertEqual(len(q), 1)
 
 
-
 class TestOperationsLog(unittest.TestCase):
     def setUp(self):
         self.log = OperationsLog()
@@ -148,7 +146,7 @@ class TestOperationsLog(unittest.TestCase):
         self.log.record_trip("2026-08-02", "Station-C", 200)
 
     def test_average_daily_trips(self):
-        
+
         self.assertAlmostEqual(self.log.average_daily_trips(), 215.0)
 
     def test_average_daily_trips_empty_log(self):
@@ -156,7 +154,7 @@ class TestOperationsLog(unittest.TestCase):
         self.assertEqual(empty_log.average_daily_trips(), 0.0)
 
     def test_kth_busiest_station(self):
-        
+
         self.assertEqual(self.log.kth_busiest_station(1), ("Station-C", 200))
         self.assertEqual(self.log.kth_busiest_station(2), ("Station-A", 180))
         self.assertEqual(self.log.kth_busiest_station(3), ("Station-B", 50))
@@ -166,11 +164,12 @@ class TestOperationsLog(unittest.TestCase):
         self.assertIsNone(self.log.kth_busiest_station(100))
 
 
-
 class TestGateSimulator(unittest.TestCase):
     def test_generate_arrivals_within_duration_and_sorted(self):
         sim = GateSimulator(num_gates=2, seed=42)
-        passengers = sim.generate_arrivals(duration_minutes=30, avg_arrivals_per_minute=2)
+        passengers = sim.generate_arrivals(
+            duration_minutes=30, avg_arrivals_per_minute=2
+        )
 
         self.assertTrue(len(passengers) > 0)
         for p in passengers:
@@ -183,9 +182,7 @@ class TestGateSimulator(unittest.TestCase):
         sim2 = GateSimulator(num_gates=1, seed=123)
         p1 = sim1.generate_arrivals(20, 1)
         p2 = sim2.generate_arrivals(20, 1)
-        self.assertEqual(
-            [p.arrival_time for p in p1], [p.arrival_time for p in p2]
-        )
+        self.assertEqual([p.arrival_time for p in p1], [p.arrival_time for p in p2])
 
     def test_simulate_fills_service_times(self):
         sim = GateSimulator(num_gates=1, service_time_seconds=60, seed=1)
@@ -193,15 +190,17 @@ class TestGateSimulator(unittest.TestCase):
         result = sim.simulate(passengers)
 
         self.assertEqual(result[0].service_start_time, 0)
-        self.assertEqual(result[0].service_end_time, 1)  
-        
+        self.assertEqual(result[0].service_end_time, 1)
+
         self.assertEqual(result[1].service_start_time, 1)
 
     def test_more_gates_reduce_average_waiting_time(self):
         sim_one_gate = GateSimulator(num_gates=1, service_time_seconds=10, seed=7)
         sim_many_gates = GateSimulator(num_gates=5, service_time_seconds=10, seed=7)
 
-        arrivals = sim_one_gate.generate_arrivals(duration_minutes=10, avg_arrivals_per_minute=3)
+        arrivals = sim_one_gate.generate_arrivals(
+            duration_minutes=10, avg_arrivals_per_minute=3
+        )
         arrivals_copy = [Passenger(p.passenger_id, p.arrival_time) for p in arrivals]
 
         result_one = sim_one_gate.simulate(arrivals)

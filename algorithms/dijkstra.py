@@ -77,7 +77,7 @@ def dijkstra_shortest_path(
     dist, parent = dijkstra(graph, start_id, criterion)
 
     if goal_id not in dist:
-        return None, float("inf") 
+        return None, float("inf")
 
     path = reconstruct_path(parent, start_id, goal_id)
     return path, dist[goal_id]

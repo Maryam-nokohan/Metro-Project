@@ -1,5 +1,5 @@
 """
-    python3 -m unittest tests/test_algorithms.py -v
+python3 -m unittest tests/test_algorithms.py -v
 """
 
 import os
@@ -18,7 +18,7 @@ EDGES_PATH = os.path.join(DATA_DIR, "edges.txt")
 
 
 def build_small_graph_with_isolated_station() -> Graph:
-  
+
     g = Graph(directed=False)
     g.add_edge("A", "B", distance=1, time=1)
     g.add_edge("B", "C", distance=1, time=1)
@@ -130,8 +130,6 @@ class TestDijkstra(unittest.TestCase):
 
 
 class TestOnRealQomGraph(unittest.TestCase):
-
-
     def setUp(self):
         self.g = build_graph_from_files(STATIONS_PATH, EDGES_PATH)
 
@@ -173,7 +171,6 @@ class TestOnRealQomGraph(unittest.TestCase):
         self.assertAlmostEqual(cost, 4.2)
 
     def test_dijkstra_distance_and_time_can_choose_different_paths(self):
-  
 
         path_d, cost_d = dijkstra_shortest_path(
             self.g,

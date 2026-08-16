@@ -26,7 +26,6 @@ def greedy_dominating_set(graph: Graph) -> List[str]:
         newly_covered = coverage[best_station] & uncovered
 
         if not newly_covered:
- 
             leftover = next(iter(uncovered))
             solution.append(leftover)
             uncovered.discard(leftover)

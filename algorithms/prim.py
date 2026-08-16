@@ -24,7 +24,7 @@ def prim(graph: Graph, start=None, criterion="distance"):
     visited = {start}
 
     heap = []
-    counter = itertools.count()  
+    counter = itertools.count()
 
     for edge in graph.neighbors(start):
         heapq.heappush(
@@ -41,7 +41,6 @@ def prim(graph: Graph, start=None, criterion="distance"):
     total = 0
 
     while heap and len(visited) < graph.num_stations():
-
         cost, _tie, edge = heapq.heappop(heap)
 
         if edge.destination in visited:
@@ -54,9 +53,7 @@ def prim(graph: Graph, start=None, criterion="distance"):
         total += cost
 
         for nxt in graph.neighbors(edge.destination):
-
             if nxt.destination not in visited:
-
                 heapq.heappush(
                     heap,
                     (

@@ -6,7 +6,6 @@ from models.edge import Edge
 
 
 class Graph:
-
     def __init__(self, directed: bool = False) -> None:
         self.directed: bool = directed
         self._stations: Dict[str, Station] = {}
@@ -45,7 +44,7 @@ class Graph:
         weight: Optional[float] = None,
         capacity: Optional[float] = None,
     ) -> Edge:
-    
+
         if source_id not in self._stations:
             self.add_station(Station(source_id))
         if destination_id not in self._stations:
@@ -80,7 +79,7 @@ class Graph:
         return self.get_edge(source_id, destination_id) is not None
 
     def remove_edge(self, source_id: str, destination_id: str) -> bool:
-  
+
         removed = False
         edges = self._adjacency.get(source_id, [])
         for edge in list(edges):
@@ -120,11 +119,10 @@ class Graph:
     def num_edges(self) -> int:
         return len(self.edges())
 
- 
     def to_adjacency_matrix(
         self, criterion: str = "distance", default: float = float("inf")
     ) -> Tuple[List[str], List[List[float]]]:
-  
+
         ids = self.station_ids()
         index_of = {station_id: i for i, station_id in enumerate(ids)}
         n = len(ids)
@@ -140,7 +138,6 @@ class Graph:
                     matrix[i][j] = w
 
         return ids, matrix
-
 
     def __contains__(self, station_id: str) -> bool:
         return station_id in self._stations

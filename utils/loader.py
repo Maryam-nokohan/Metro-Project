@@ -10,7 +10,7 @@ def _read_non_comment_lines(path: str) -> List[str]:
     with open(path, "r", encoding="utf-8") as f:
         for raw_line in f:
             line = raw_line.strip()
-            if not line or line.startswith("#"):
+            if not line or line.startswith("
                 continue
             lines.append(line)
     return lines

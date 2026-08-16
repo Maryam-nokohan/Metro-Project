@@ -9,7 +9,7 @@ def _build_residual_graph(graph: Graph) -> Dict[str, Dict[str, float]]:
     residual: Dict[str, Dict[str, float]] = defaultdict(dict)
 
     for station_id in graph.station_ids():
-        residual[station_id] 
+        residual[station_id]
 
     for edge in graph.edges():
         capacity = edge.capacity if edge.capacity is not None else 0.0
@@ -62,7 +62,7 @@ def max_flow(graph: Graph, source_id: str, sink_id: str) -> float:
     while True:
         parent = _bfs_find_augmenting_path(residual, source_id, sink_id)
         if parent is None:
-            break 
+            break
 
         bottleneck = float("inf")
         v = sink_id

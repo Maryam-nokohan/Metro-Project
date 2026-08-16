@@ -46,10 +46,6 @@ app = FastAPI(title="Qom Metro Router API")
 templates = Jinja2Templates(directory="templates")
 
 
-# ============================================================
-# LOAD GRAPH
-# ============================================================
-
 graph = build_graph_from_files(
     "data/stations.txt",
     "data/edges.txt",
@@ -60,10 +56,6 @@ apply_capacities_from_file(
     "data/capacity.txt",
 )
 
-
-# ============================================================
-# REQUEST MODELS
-# ============================================================
 
 class PathRequest(BaseModel):
     start: str
@@ -76,10 +68,6 @@ class StationRequest(BaseModel):
     criterion: Optional[str] = "distance"
 
 
-# ============================================================
-# FRONTEND
-# ============================================================
-
 @app.get("/", response_class=HTMLResponse)
 async def read_root(request: Request):
     return templates.TemplateResponse(
@@ -88,20 +76,10 @@ async def read_root(request: Request):
     )
 
 
-# ============================================================
-# STATIONS
-# ============================================================
-
 @app.get("/api/stations")
 def get_stations():
-    return {
-        "stations": graph.station_ids()
-    }
+    return {"stations": graph.station_ids()}
 
-
-# ============================================================
-# T1 - ROUTING
-# ============================================================
 
 @app.post("/api/reachability")
 def check_reachability(req: PathRequest):
@@ -139,9 +117,7 @@ def shortest_path(req: PathRequest):
         "cost": cost,
         "criterion": req.criterion,
     }
-# ============================================================
-# T2.1 / T2.2 - MST
-# ============================================================
+
 
 @app.get("/api/mst")
 def get_mst(
@@ -160,11 +136,8 @@ def get_mst(
 
     return {
         "criterion": criterion,
-
         "kruskal_cost": kruskal_result.total_cost,
-
         "prim_cost": prim_result.total_cost,
-
         "edges": [
             {
                 "source": edge.source,
@@ -175,10 +148,6 @@ def get_mst(
         ],
     }
 
-
-# ============================================================
-# T2.3 - EXPRESS LINE / DAG
-# ============================================================
 
 @app.get("/api/dag")
 def get_dag():
@@ -201,7 +170,6 @@ def get_dag():
 def dag_shortest_path(req: PathRequest):
 
     try:
-
         path, cost = dag_shortest_path_to_target(
             graph,
             req.start,
@@ -217,7 +185,6 @@ def dag_shortest_path(req: PathRequest):
         }
 
     except ValueError as error:
-
         return {
             "is_dag": False,
             "path": None,
@@ -225,10 +192,6 @@ def dag_shortest_path(req: PathRequest):
             "error": str(error),
         }
 
-
-# ============================================================
-# T2.4 - BELLMAN-FORD / NEGATIVE CYCLE
-# ============================================================
 
 @app.post("/api/bellman-ford")
 def bellman_ford_route(req: StationRequest):
@@ -242,27 +205,14 @@ def bellman_ford_route(req: StationRequest):
     return {
         "start": req.station,
         "criterion": req.criterion,
-
         "distances": {
-            station: (
-                None
-                if value == float("inf")
-                else value
-            )
+            station: (None if value == float("inf") else value)
             for station, value in dist.items()
         },
-
         "negative_cycle": negative_cycle,
-
-        "has_negative_cycle": bool(
-            negative_cycle
-        ),
+        "has_negative_cycle": bool(negative_cycle),
     }
 
-
-# ============================================================
-# T3.1 - MAXIMUM FLOW / TRAIN CAPACITY
-# ============================================================
 
 @app.post("/api/max-flow")
 def calculate_max_flow(req: PathRequest):
@@ -280,10 +230,6 @@ def calculate_max_flow(req: PathRequest):
     }
 
 
-# ============================================================
-# T3.2 / T3.3 - NETWORK-WIDE SHORTEST PATHS
-# ============================================================
-
 @app.get("/api/floyd-warshall")
 def get_floyd_warshall(
     criterion: str = "distance",
@@ -298,17 +244,10 @@ def get_floyd_warshall(
         "criterion": criterion,
         "stations": station_ids,
         "distances": [
-            [
-                None
-                if value == float("inf")
-                else value
-                for value in row
-            ]
+            [None if value == float("inf") else value for value in row]
             for row in distances
         ],
-        "has_negative_cycle": has_negative_cycle(
-            distances
-        ),
+        "has_negative_cycle": has_negative_cycle(distances),
     }
 
 
@@ -328,23 +267,15 @@ def floyd_warshall_path(req: PathRequest):
     )
 
     if path is None:
-
         return {
             "path": None,
             "cost": None,
             "criterion": req.criterion,
         }
 
-    index = {
-        station: i
-        for i, station in enumerate(station_ids)
-    }
+    index = {station: i for i, station in enumerate(station_ids)}
 
-    cost = distances[
-        index[req.start]
-    ][
-        index[req.goal]
-    ]
+    cost = distances[index[req.start]][index[req.goal]]
 
     return {
         "path": path,
@@ -353,18 +284,10 @@ def floyd_warshall_path(req: PathRequest):
     }
 
 
-# ============================================================
-# T4.3 - CRITICAL STATIONS / BRIDGES
-# ============================================================
-
 @app.get("/api/critical-nodes")
 def critical_nodes():
 
-    points, bridges = (
-        find_articulation_points_and_bridges(
-            graph
-        )
-    )
+    points, bridges = find_articulation_points_and_bridges(graph)
 
     return {
         "points": list(points),
@@ -372,26 +295,16 @@ def critical_nodes():
     }
 
 
-# ============================================================
-# T4.4 - DOMINATING SET
-# ============================================================
-
 @app.get("/api/dominating-set")
 def dominating_set():
 
-    solution = greedy_dominating_set(
-        graph
-    )
+    solution = greedy_dominating_set(graph)
 
     return {
         "solution": solution,
         "count": len(solution),
     }
 
-
-# ============================================================
-# T4.6 - TYPO-TOLERANT SEARCH
-# ============================================================
 
 @app.get("/api/search")
 def search_station(q: str):
@@ -404,7 +317,6 @@ def search_station(q: str):
 
     return {
         "query": q,
-
         "results": [
             {
                 "name": result[0],
@@ -414,10 +326,6 @@ def search_station(q: str):
         ],
     }
 
-
-# ============================================================
-# BONUS - BIDIRECTIONAL DIJKSTRA
-# ============================================================
 
 @app.post("/api/compare-routing")
 def compare_routing(req: PathRequest):

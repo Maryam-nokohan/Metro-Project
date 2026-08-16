@@ -32,7 +32,6 @@ def topological_sort(graph: Graph) -> Optional[List[str]]:
         order.append(current)
 
         for edge in graph.neighbors(current):
-
             neighbor = edge.destination
 
             indegree[neighbor] -= 1
@@ -55,32 +54,24 @@ def dag_shortest_path(
     order = topological_sort(graph)
 
     if order is None:
-        raise ValueError(
-            "Graph is not DAG"
-        )
+        raise ValueError("Graph is not DAG")
 
-    dist = {
-        station: float("inf")
-        for station in graph.station_ids()
-    }
+    dist = {station: float("inf") for station in graph.station_ids()}
 
     parent = {}
 
     dist[start] = 0
 
     for node in order:
-
         if dist[node] == float("inf"):
             continue
 
         for edge in graph.neighbors(node):
-
             weight = edge.get_weight(criterion)
 
             new_dist = dist[node] + weight
 
             if new_dist < dist[edge.destination]:
-
                 dist[edge.destination] = new_dist
 
                 parent[edge.destination] = node
