@@ -1,1937 +1,1532 @@
+<!-- templates/index.html -->
+
 <!doctype html>
 <html lang="fa" dir="rtl">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سامانه مدیریت و مسیریابی متروی قم</title>
 
-    <title>سامانه مدیریت و مسیریابی متروی قم</title>
+  <script src="https://cdn.tailwindcss.com"></script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(20,184,166,.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(59,130,246,.14), transparent 30%),
+        #020617;
+    }
 
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              metro: {
-                50: "#effcfb",
-                100: "#d8f7f4",
-                200: "#b2eee8",
-                300: "#7de0d8",
-                400: "#45c9c1",
-                500: "#25aaa4",
-                600: "#1c8986",
-                700: "#1b6e6c",
-                800: "#1b5756",
-                900: "#1a4948",
-              },
-            },
-          },
-        },
-      };
-    </script>
+    .glass {
+      background: rgba(15,23,42,.82);
+      backdrop-filter: blur(18px);
+    }
 
-    <style>
-      html {
-        scroll-behavior: smooth;
-      }
+    .card {
+      background: rgba(15,23,42,.78);
+      border: 1px solid rgba(148,163,184,.13);
+      box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    }
 
-      body {
-        font-family: Vazirmatn, IRANSans, Tahoma, Arial, sans-serif;
+    .input {
+      width: 100%;
+      padding: .75rem;
+      border-radius: .75rem;
+      background: rgba(30,41,59,.9);
+      border: 1px solid rgba(148,163,184,.2);
+      color: white;
+      outline: none;
+    }
 
-        background:
-          radial-gradient(
-            circle at top right,
-            rgba(37, 170, 164, 0.18),
-            transparent 30%
-          ),
-          radial-gradient(
-            circle at bottom left,
-            rgba(59, 130, 246, 0.12),
-            transparent 30%
-          ),
-          #020617;
-      }
+    .input:focus {
+      border-color: #2dd4bf;
+    }
 
-      ::-webkit-scrollbar {
-        width: 8px;
-      }
+    .result {
+      background: rgba(2,6,23,.65);
+      border: 1px solid rgba(148,163,184,.12);
+      border-radius: .75rem;
+      padding: 1rem;
+    }
 
-      ::-webkit-scrollbar-track {
-        background: #020617;
-      }
+    .hidden-section {
+      display: none;
+    }
 
-      ::-webkit-scrollbar-thumb {
-        background: #334155;
-        border-radius: 999px;
-      }
+    .sidebar-button {
+      transition: .2s;
+    }
 
-      ::-webkit-scrollbar-thumb:hover {
-        background: #475569;
-      }
+    .sidebar-button.active {
+      background: rgba(20,184,166,.16);
+      border-color: rgba(45,212,191,.35);
+      color: #99f6e4;
+    }
+  </style>
+</head>
 
-      .glass {
-        background: rgba(15, 23, 42, 0.72);
-        backdrop-filter: blur(18px);
-        -webkit-backdrop-filter: blur(18px);
-      }
+<body class="min-h-screen text-slate-100">
 
-      .section-card {
-        background: rgba(15, 23, 42, 0.76);
-        border: 1px solid rgba(148, 163, 184, 0.12);
-        box-shadow:
-          0 20px 50px rgba(0, 0, 0, 0.18),
-          inset 0 1px 0 rgba(255, 255, 255, 0.025);
-      }
+<header class="sticky top-0 z-50 border-b border-white/10 glass">
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold">
+          سامانه مدیریت و مسیریابی متروی قم
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">
+          UrbanPulse Dynamics
+        </p>
+      </div>
 
-      .result-box {
-        background: rgba(2, 6, 23, 0.65);
-        border: 1px solid rgba(148, 163, 184, 0.12);
-      }
+      <div id="status"
+           class="text-xs px-3 py-2 rounded-full bg-slate-800">
+        در حال اتصال...
+      </div>
+    </div>
+  </div>
+</header>
 
-      .input {
-        width: 100%;
-        border-radius: 0.75rem;
-        border: 1px solid rgba(148, 163, 184, 0.2);
-        background: rgba(30, 41, 59, 0.8);
-        padding: 0.75rem 0.9rem;
-        color: white;
-        outline: none;
-        transition: all 0.2s;
-      }
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
 
-      .input:focus {
-        border-color: #2dd4bf;
-        box-shadow: 0 0 0 3px rgba(45, 212, 191, 0.12);
-      }
+    <aside class="lg:col-span-3">
+      <div class="card rounded-2xl p-4 sticky top-24">
+        <h2 class="font-bold mb-4">کنترل پنل</h2>
 
-      select.input option {
-        background: #0f172a;
-        color: white;
-      }
+        <nav class="space-y-2">
 
-      .sidebar-button {
-        transition: all 0.2s ease;
-      }
+          <button onclick="show('routing',this)"
+                  class="sidebar-button active w-full text-right p-3 rounded-xl border border-transparent">
+            T1 — مسیریابی
+          </button>
 
-      .sidebar-button.active {
-        background: rgba(37, 170, 164, 0.16);
-        border-color: rgba(45, 212, 191, 0.35);
-        color: #99f6e4;
-      }
+          <button onclick="show('mst',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.1 — MST
+          </button>
 
-      .hidden-section {
-        display: none;
-      }
+          <button onclick="show('dag',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.3 — Express DAG
+          </button>
 
-      .loading {
-        animation: pulse 1.4s infinite;
-      }
+          <button onclick="show('negative',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.4 — Bellman-Ford
+          </button>
 
-      @keyframes pulse {
-        50% {
-          opacity: 0.45;
-        }
-      }
+          <button onclick="show('operations',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T3 — عملیات روزانه
+          </button>
 
-      .table-row:hover {
-        background: rgba(255, 255, 255, 0.025);
-      }
+          
+                    <button onclick="show('allpairs',this)"
+                            class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+                      T4.1 — Floyd-Warshall
+                    </button>
+          <button onclick="show('flow',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.2 — Max Flow
+          </button>
 
-      .code {
-        font-family: monospace;
-        direction: ltr;
-        text-align: left;
-      }
-    </style>
-  </head>
+          <button onclick="show('critical',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.3 — نقاط بحرانی
+          </button>
 
-  <body class="min-h-screen text-slate-100">
-    <!-- ========================================================= -->
-    <!-- HEADER -->
-    <!-- ========================================================= -->
+          <button onclick="show('dominating',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.4 — Dominating Set
+          </button>
 
-    <header class="sticky top-0 z-50 border-b border-white/10 glass">
-      <div class="max-w-7xl mx-auto px-4 sm:px-6 py-4">
-        <div class="flex items-center justify-between gap-4">
-          <div class="flex items-center gap-4">
-            <!-- Metro SVG Logo -->
-            <div
-              class="w-11 h-11 rounded-xl bg-gradient-to-br from-teal-400 to-cyan-700 flex items-center justify-center shadow-lg"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                class="w-6 h-6 text-white"
-              >
-                <path d="M4 17h16" />
-                <path d="M6 17V8a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v9" />
-                <path d="M8 20h8" />
-                <path d="M7 10h10" />
-                <circle cx="8" cy="17" r="1" />
-                <circle cx="16" cy="17" r="1" />
-              </svg>
-            </div>
+          <button onclick="show('search',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.5 — جستجوی نام
+          </button>
 
-            <div>
-              <h1 class="font-bold text-lg sm:text-xl">
-                سامانه مدیریت و مسیریابی متروی قم
-              </h1>
+          <button onclick="show('innovation',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T5 — نوآوری
+          </button>
 
-              <p class="text-xs text-slate-400 mt-1">
-                تحلیل گراف و الگوریتم‌های مسیریابی
-              </p>
-            </div>
-          </div>
+        </nav>
+      </div>
+    </aside>
 
-          <div class="hidden sm:flex items-center gap-2">
-            <span
-              id="api-status"
-              class="flex items-center gap-2 text-xs px-3 py-2 rounded-full bg-slate-800 border border-white/10"
-            >
-              <span class="w-2 h-2 rounded-full bg-slate-500"></span>
+    <section class="lg:col-span-9 space-y-6">
 
-              در حال اتصال...
-            </span>
-          </div>
+      <!-- T1 -->
+      <section id="section-routing" class="card rounded-2xl p-6">
+        <h2 class="text-2xl font-bold">T1 — مسیریابی</h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="start" class="input"></select>
+          <select id="goal" class="input"></select>
         </div>
+
+        <select id="criterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <div class="grid sm:grid-cols-3 gap-3 mt-4">
+          <button onclick="shortestPath()"
+                  class="bg-teal-600 rounded-xl p-3">
+            Dijkstra
+          </button>
+
+          <button onclick="reachability()"
+                  class="bg-slate-700 rounded-xl p-3">
+            BFS / DFS
+          </button>
+
+          <button onclick="compareRouting()"
+                  class="bg-indigo-600 rounded-xl p-3">
+            مقایسه
+          </button>
+        </div>
+
+        <div id="routing-result" class="result mt-5"></div>
+      </section>
+
+      <!-- MST -->
+      <section id="section-mst"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T2.1 / T2.2 — MST</h2>
+
+        <select id="mstCriterion" class="input mt-5">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="mst()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          محاسبه MST
+        </button>
+
+        <div id="mst-result" class="result mt-5"></div>
+      </section>
+
+      <!-- DAG -->
+      <section id="section-dag"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T2.3 — خط Express یک‌طرفه و DAG
+        </h2>
+
+        <p class="text-sm text-slate-400 mt-2">
+          خط Express به صورت واقعی روی یک گراف جهت‌دار مستقل
+          از گراف اصلی ساخته شده است.
+        </p>
+
+        <button onclick="loadDAG()"
+                class="mt-4 bg-indigo-600 rounded-xl px-6 py-3">
+          نمایش Express Line
+        </button>
+
+        <div id="dag-result" class="result mt-5"></div>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="dagStart" class="input"></select>
+          <select id="dagGoal" class="input"></select>
+        </div>
+
+        <select id="dagCriterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="dagPath()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          کوتاه‌ترین مسیر DAG
+        </button>
+
+        <div id="dag-path-result" class="result mt-5"></div>
+      </section>
+
+      <!-- NEGATIVE -->
+      <section id="section-negative"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T2.4 — Bellman-Ford و چرخه منفی
+        </h2>
+
+        <select id="bellmanStart" class="input mt-5"></select>
+
+        <select id="bellmanCriterion" class="input mt-4">
+          <option value="weight">وزن</option>
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="bellman()"
+                class="mt-4 bg-amber-600 rounded-xl px-6 py-3">
+          اجرای Bellman-Ford
+        </button>
+
+        <div id="bellman-result" class="result mt-5"></div>
+      </section>
+
+
+
+<section id="section-operations"
+         class="card rounded-2xl p-6 hidden-section">
+
+
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold">
+      T3 — عملیات روزانه مترو
+    </h2>
+
+    <p class="text-sm text-slate-400 mt-2 leading-7">
+      ابزارهای مدیریت و تحلیل عملیات روزانه مترو؛
+      از زمان‌بندی قطارها و مدیریت اولویت اعزام
+      تا تحلیل سفرها و شبیه‌سازی ورود مسافران.
+    </p>
+  </div>
+
+
+
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
+
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-2xl">🚆</div>
+
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.1 — زمان‌بندی قطارها در سکو
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          بیشترین تعداد قطارهایی را پیدا می‌کند که می‌توانند
+          بدون تداخل زمانی از یک سکو استفاده کنند.
+        </p>
       </div>
-    </header>
+    </div>
 
-    <!-- ========================================================= -->
-    <!-- MAIN -->
-    <!-- ========================================================= -->
 
-    <main class="max-w-7xl mx-auto px-4 sm:px-6 py-8">
-      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <!-- ================================================= -->
-        <!-- SIDEBAR -->
-        <!-- ================================================= -->
+    <div class="bg-slate-900/50 border border-white/5 rounded-xl p-4 mb-4">
 
-        <aside class="lg:col-span-3">
-          <div class="section-card rounded-2xl p-4 sticky top-24">
-            <div class="px-3 pb-4 mb-3 border-b border-white/10">
-              <p class="text-xs text-slate-500 uppercase tracking-wider">
-                کنترل پنل
-              </p>
+      <p class="text-sm font-medium mb-2">
+        اطلاعات قطارها
+      </p>
 
-              <h2 class="font-bold mt-1">قابلیت‌های سیستم</h2>
-            </div>
+      <p class="text-xs text-slate-500 leading-6">
+        برای هر قطار، شناسه، زمان ورود و زمان خروج را وارد کنید.
+        زمان‌ها را می‌توانید بر اساس دقیقه یا هر واحد زمانی دلخواه
+        وارد کنید.
+      </p>
 
-            <nav class="space-y-2">
-              <button
-                onclick="switchSection('routing', this)"
-                class="sidebar-button active w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M9 20l-5-4 4-5 4 4 7-8"
-                  />
-                </svg>
+    </div>
 
-                <span>مسیریابی و دسترسی</span>
-              </button>
 
-              <button
-                onclick="switchSection('mst', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 3v18M3 12h18M5 5l14 14M19 5L5 19"
-                  />
-                </svg>
+    <label for="scheduleInput"
+           class="block text-sm font-medium mb-2">
+      لیست قطارها
+    </label>
+<textarea id="scheduleInput"
+          class="input mt-1 h-52 font-mono text-sm"
+          dir="ltr">[
+  {
+    "train_id": "T1",
+    "arrival_time": 0,
+    "departure_time": 10
+  },
+  {
+    "train_id": "T2",
+    "arrival_time": 2,
+    "departure_time": 8
+  },
+  {
+    "train_id": "T3",
+    "arrival_time": 8,
+    "departure_time": 12
+  }
+]</textarea>
 
-                <span>شبکه کم‌هزینه MST</span>
-              </button>
 
-              <button
-                onclick="switchSection('dag', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M4 6h6M14 6h6M7 6v12M17 6v12M7 18h10"
-                  />
-                </svg>
+    <div class="flex flex-wrap items-center gap-3 mt-4">
 
-                <span>مسیر Express و DAG</span>
-              </button>
+      <button onclick="scheduleTrains()"
+              class="bg-teal-600 hover:bg-teal-500 rounded-xl px-6 py-3 transition">
+        🚆 پیدا کردن بهترین زمان‌بندی
+      </button>
 
-              <button
-                onclick="switchSection('negative', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 9v4M12 17h.01M10.3 3.5h3.4L21 19H3L10.3 3.5z"
-                  />
-                </svg>
+      <span class="text-xs text-slate-500">
+        مثال بالا را می‌توانید مستقیماً اجرا کنید.
+      </span>
 
-                <span>وزن منفی و Bellman-Ford</span>
-              </button>
+    </div>
 
-              <button
-                onclick="switchSection('flow', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M4 12h16M4 12l5-5M4 12l5 5M20 7l-5 5 5 5"
-                  />
-                </svg>
 
-                <span>ظرفیت و Max Flow</span>
-              </button>
+    <div id="schedule-result"
+         class="result mt-4"></div>
 
-              <button
-                onclick="switchSection('allpairs', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="6" cy="6" r="2" />
-                  <circle cx="18" cy="6" r="2" />
-                  <circle cx="6" cy="18" r="2" />
-                  <circle cx="18" cy="18" r="2" />
-                  <path d="M8 6h8M6 8v8M18 8v8M8 18h8" />
-                </svg>
+  </div>
 
-                <span>Floyd-Warshall</span>
-              </button>
 
-              <button
-                onclick="switchSection('analysis', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                    d="M12 3l8 4v5c0 4.5-3.4 7.8-8 9-4.6-1.2-8-4.5-8-9V7l8-4z"
-                  />
-                  <path d="M12 8v5M12 16h.01" />
-                </svg>
 
-                <span>ایستگاه‌های بحرانی</span>
-              </button>
 
-              <button
-                onclick="switchSection('dominating', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="12" cy="12" r="3" />
-                  <circle cx="12" cy="12" r="9" />
-                </svg>
 
-                <span>Dominating Set</span>
-              </button>
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
 
-              <button
-                onclick="switchSection('search', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <circle cx="11" cy="11" r="7" />
-                  <path d="M20 20l-4-4" />
-                </svg>
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-2xl">🚨</div>
 
-                <span>جستجوی ایستگاه</span>
-              </button>
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.2 — مدیریت اولویت اعزام قطارها
+        </h3>
 
-              <button
-                onclick="switchSection('compare', this)"
-                class="sidebar-button w-full flex items-center gap-3 text-right px-4 py-3 rounded-xl border border-transparent"
-              >
-                <svg
-                  class="w-5 h-5"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path d="M4 7h7M13 7h7M4 17h7M13 17h7" />
-                  <path d="M11 4l3 3-3 3M13 14l-3 3 3 3" />
-                </svg>
-
-                <span>مقایسه مسیریابی</span>
-              </button>
-            </nav>
-          </div>
-        </aside>
-
-        <!-- ================================================= -->
-        <!-- CONTENT -->
-        <!-- ================================================= -->
-
-        <section class="lg:col-span-9 space-y-6">
-          <!-- ================================================= -->
-          <!-- ROUTING -->
-          <!-- ================================================= -->
-
-          <section id="section-routing" class="section-card rounded-2xl p-6">
-            <div class="mb-6">
-              <p class="text-xs text-teal-400 font-semibold mb-2">ROUTING</p>
-
-              <h2 class="text-2xl font-bold">مسیریابی بین ایستگاه‌ها</h2>
-
-              <p class="text-sm text-slate-400 mt-2">
-                محاسبه کوتاه‌ترین مسیر و بررسی دسترسی با BFS، DFS و Dijkstra
-              </p>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-4">
-              <div>
-                <label class="text-sm text-slate-300 block mb-2">
-                  ایستگاه مبدأ
-                </label>
-
-                <select id="start-station" class="input">
-                  <option>در حال بارگذاری...</option>
-                </select>
-              </div>
-
-              <div>
-                <label class="text-sm text-slate-300 block mb-2">
-                  ایستگاه مقصد
-                </label>
-
-                <select id="goal-station" class="input">
-                  <option>در حال بارگذاری...</option>
-                </select>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <label class="text-sm text-slate-300 block mb-2">
-                معیار وزن
-              </label>
-
-              <select id="criterion" class="input">
-                <option value="distance">فاصله</option>
-
-                <option value="time">زمان</option>
-              </select>
-            </div>
-
-            <div class="grid sm:grid-cols-3 gap-3 mt-5">
-              <button
-                onclick="fetchShortestPath()"
-                class="bg-teal-600 hover:bg-teal-500 rounded-xl py-3 font-semibold"
-              >
-                Dijkstra
-              </button>
-
-              <button
-                onclick="fetchReachability()"
-                class="bg-slate-700 hover:bg-slate-600 rounded-xl py-3 font-semibold"
-              >
-                BFS / DFS
-              </button>
-
-              <button
-                onclick="fetchComparison()"
-                class="bg-indigo-600 hover:bg-indigo-500 rounded-xl py-3 font-semibold"
-              >
-                مقایسه
-              </button>
-            </div>
-
-            <div id="routing-results" class="result-box rounded-xl p-5 mt-5">
-              نتیجه در این قسمت نمایش داده می‌شود.
-            </div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- MST -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-mst"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-teal-400 font-semibold mb-2">MST</p>
-
-            <h2 class="text-2xl font-bold">کم‌هزینه‌ترین شبکه</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              مقایسه الگوریتم‌های Kruskal و Prim
-            </p>
-
-            <div class="mt-5">
-              <label class="text-sm text-slate-300 block mb-2">
-                معیار هزینه
-              </label>
-
-              <select id="mst-criterion" class="input">
-                <option value="distance">فاصله</option>
-
-                <option value="time">زمان</option>
-              </select>
-            </div>
-
-            <button
-              onclick="fetchMST()"
-              class="mt-5 bg-teal-600 hover:bg-teal-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              محاسبه MST
-            </button>
-
-            <div id="mst-results" class="result-box rounded-xl p-5 mt-5">
-              برای شروع محاسبه، دکمه بالا را انتخاب کنید.
-            </div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- DAG -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-dag"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-teal-400 font-semibold mb-2">
-              EXPRESS LINE / DAG
-            </p>
-
-            <h2 class="text-2xl font-bold">مسیر Express و گراف DAG</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              بررسی ترتیب توپولوژیک و محاسبه کوتاه‌ترین مسیر در DAG
-            </p>
-
-            <button
-              onclick="fetchDAG()"
-              class="mt-5 bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              بررسی DAG
-            </button>
-
-            <div
-              id="dag-order-result"
-              class="result-box rounded-xl p-5 mt-5"
-            ></div>
-
-            <div class="border-t border-white/10 mt-6 pt-6">
-              <h3 class="font-bold mb-4">کوتاه‌ترین مسیر در DAG</h3>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <select id="dag-start" class="input"></select>
-
-                <select id="dag-goal" class="input"></select>
-              </div>
-
-              <select id="dag-criterion" class="input mt-4">
-                <option value="distance">فاصله</option>
-                <option value="time">زمان</option>
-              </select>
-
-              <button
-                onclick="fetchDAGShortestPath()"
-                class="mt-4 bg-teal-600 hover:bg-teal-500 px-6 py-3 rounded-xl font-semibold"
-              >
-                محاسبه مسیر DAG
-              </button>
-
-              <div
-                id="dag-path-result"
-                class="result-box rounded-xl p-5 mt-4"
-              ></div>
-            </div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- BELLMAN FORD -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-negative"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-amber-400 font-semibold mb-2">
-              NEGATIVE WEIGHTS
-            </p>
-
-            <h2 class="text-2xl font-bold">وزن‌های منفی و Bellman-Ford</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              محاسبه فاصله‌ها و بررسی وجود چرخه منفی
-            </p>
-
-            <select id="bellman-start" class="input mt-5"></select>
-
-            <select id="bellman-criterion" class="input mt-4">
-              <option value="distance">فاصله</option>
-              <option value="time">زمان</option>
-            </select>
-
-            <button
-              onclick="fetchBellmanFord()"
-              class="mt-4 bg-amber-600 hover:bg-amber-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              اجرای Bellman-Ford
-            </button>
-
-            <div
-              id="bellman-results"
-              class="result-box rounded-xl p-5 mt-5"
-            ></div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- MAX FLOW -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-flow"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-blue-400 font-semibold mb-2">
-              NETWORK CAPACITY
-            </p>
-
-            <h2 class="text-2xl font-bold">ظرفیت شبکه و Maximum Flow</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              محاسبه بیشینه جریان قابل عبور بین دو ایستگاه
-            </p>
-
-            <div class="grid md:grid-cols-2 gap-4 mt-5">
-              <select id="flow-start" class="input"></select>
-
-              <select id="flow-goal" class="input"></select>
-            </div>
-
-            <button
-              onclick="fetchMaxFlow()"
-              class="mt-5 bg-blue-600 hover:bg-blue-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              محاسبه Maximum Flow
-            </button>
-
-            <div id="flow-results" class="result-box rounded-xl p-5 mt-5"></div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- FLOYD WARSHALL -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-allpairs"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-purple-400 font-semibold mb-2">
-              ALL-PAIRS SHORTEST PATH
-            </p>
-
-            <h2 class="text-2xl font-bold">Floyd-Warshall</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              محاسبه کوتاه‌ترین فاصله بین تمام جفت ایستگاه‌ها
-            </p>
-
-            <select id="floyd-criterion" class="input mt-5">
-              <option value="distance">فاصله</option>
-              <option value="time">زمان</option>
-            </select>
-
-            <button
-              onclick="fetchFloydWarshall()"
-              class="mt-4 bg-purple-600 hover:bg-purple-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              محاسبه ماتریس فاصله
-            </button>
-
-            <div
-              id="floyd-results"
-              class="result-box rounded-xl p-5 mt-5 overflow-auto"
-            ></div>
-
-            <div class="border-t border-white/10 mt-6 pt-6">
-              <h3 class="font-bold mb-4">بازیابی مسیر مشخص</h3>
-
-              <div class="grid md:grid-cols-2 gap-4">
-                <select id="floyd-start" class="input"></select>
-
-                <select id="floyd-goal" class="input"></select>
-              </div>
-
-              <button
-                onclick="fetchFloydPath()"
-                class="mt-4 bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-semibold"
-              >
-                یافتن مسیر
-              </button>
-
-              <div
-                id="floyd-path-result"
-                class="result-box rounded-xl p-5 mt-4"
-              ></div>
-            </div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- CRITICAL -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-analysis"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-red-400 font-semibold mb-2">
-              NETWORK ANALYSIS
-            </p>
-
-            <h2 class="text-2xl font-bold">ایستگاه‌های بحرانی و پل‌ها</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              شناسایی Articulation Points و Bridges
-            </p>
-
-            <button
-              onclick="fetchCriticalNodes()"
-              class="mt-5 bg-red-600 hover:bg-red-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              اجرای تحلیل
-            </button>
-
-            <div
-              id="critical-results"
-              class="grid md:grid-cols-2 gap-4 mt-5"
-            ></div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- DOMINATING SET -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-dominating"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-cyan-400 font-semibold mb-2">
-              GRAPH COVERAGE
-            </p>
-
-            <h2 class="text-2xl font-bold">Dominating Set</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              یافتن مجموعه‌ای از ایستگاه‌ها برای پوشش شبکه
-            </p>
-
-            <button
-              onclick="fetchDominatingSet()"
-              class="mt-5 bg-cyan-600 hover:bg-cyan-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              محاسبه Dominating Set
-            </button>
-
-            <div
-              id="dominating-results"
-              class="result-box rounded-xl p-5 mt-5"
-            ></div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- SEARCH -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-search"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-teal-400 font-semibold mb-2">
-              LEVENSHTEIN SEARCH
-            </p>
-
-            <h2 class="text-2xl font-bold">جستجوی تحمل‌پذیر خطای تایپی</h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              یافتن نزدیک‌ترین نام ایستگاه با فاصله ویرایشی
-            </p>
-
-            <div class="flex flex-col sm:flex-row gap-3 mt-5">
-              <input
-                id="search-query"
-                type="text"
-                class="input"
-                placeholder="نام ایستگاه را وارد کنید..."
-              />
-
-              <button
-                onclick="fetchSearch()"
-                class="bg-teal-600 hover:bg-teal-500 px-8 py-3 rounded-xl font-semibold whitespace-nowrap"
-              >
-                جستجو
-              </button>
-            </div>
-
-            <div
-              id="search-results"
-              class="result-box rounded-xl p-5 mt-5"
-            ></div>
-          </section>
-
-          <!-- ================================================= -->
-          <!-- COMPARISON -->
-          <!-- ================================================= -->
-
-          <section
-            id="section-compare"
-            class="section-card rounded-2xl p-6 hidden-section"
-          >
-            <p class="text-xs text-indigo-400 font-semibold mb-2">
-              ALGORITHM COMPARISON
-            </p>
-
-            <h2 class="text-2xl font-bold">
-              مقایسه Dijkstra و Bidirectional Dijkstra
-            </h2>
-
-            <p class="text-sm text-slate-400 mt-2">
-              مقایسه تعداد گره‌های بررسی‌شده و هزینه مسیر
-            </p>
-
-            <div class="grid md:grid-cols-2 gap-4 mt-5">
-              <select id="compare-start" class="input"></select>
-
-              <select id="compare-goal" class="input"></select>
-            </div>
-
-            <select id="compare-criterion" class="input mt-4">
-              <option value="distance">فاصله</option>
-              <option value="time">زمان</option>
-            </select>
-
-            <button
-              onclick="fetchComparison()"
-              class="mt-4 bg-indigo-600 hover:bg-indigo-500 px-6 py-3 rounded-xl font-semibold"
-            >
-              اجرای مقایسه
-            </button>
-
-            <div
-              id="compare-results"
-              class="grid md:grid-cols-2 gap-4 mt-5"
-            ></div>
-          </section>
-        </section>
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          قطارها بر اساس میزان اولویت مرتب می‌شوند تا مشخص شود
+          کدام قطار باید زودتر اعزام شود.
+        </p>
       </div>
-    </main>
+    </div>
 
-    <script>
-      const $ = (id) => document.getElementById(id);
 
-      async function api(url, options = {}) {
-        try {
-          const response = await fetch(url, options);
+    <!-- Train information -->
 
-          const data = await response.json();
+    <div class="grid md:grid-cols-2 gap-4">
 
-          if (!response.ok) {
-            throw new Error(
-              data.detail || data.error || `HTTP ${response.status}`,
-            );
-          }
+      <div>
+        <label for="trainId"
+               class="block text-sm font-medium mb-2">
+          شناسه قطار
+        </label>
 
-          return data;
-        } catch (error) {
-          console.error(error);
+        <input id="trainId"
+               class="input"
+               placeholder="مثلاً T1">
+      </div>
 
-          throw error;
-        }
-      }
 
-      function showError(element, error) {
-        element.innerHTML = `
-        <div class="border border-red-500/20
-                    bg-red-500/10
-                    rounded-xl p-4 text-red-300">
+      <div>
+        <label for="arrivalTime"
+               class="block text-sm font-medium mb-2">
+          زمان ورود
+        </label>
 
-            <div class="font-semibold">
-                خطا در ارتباط با API
-            </div>
+        <input id="arrivalTime"
+               class="input"
+               type="number"
+               step="0.1"
+               placeholder="مثلاً 10">
+      </div>
 
-            <div class="text-sm mt-1 text-red-400">
-                ${escapeHtml(error.message)}
-            </div>
+
+      <div>
+        <label for="departureTime"
+               class="block text-sm font-medium mb-2">
+          زمان خروج
+        </label>
+
+        <input id="departureTime"
+               class="input"
+               type="number"
+               step="0.1"
+               placeholder="مثلاً 15">
+      </div>
+
+
+      <div>
+        <label for="delay"
+               class="block text-sm font-medium mb-2">
+          میزان تأخیر
+          <span class="text-slate-500">(دقیقه)</span>
+        </label>
+
+        <input id="delay"
+               class="input"
+               type="number"
+               step="0.1"
+               min="0"
+               value="0"
+               placeholder="0">
+      </div>
+
+    </div>
+
+
+    <!-- Emergency -->
+
+    <label class="flex items-center gap-3 mt-5 cursor-pointer">
+
+      <input id="emergency"
+             type="checkbox"
+             class="w-4 h-4">
+
+      <span class="text-sm">
+        این قطار وضعیت اضطراری دارد
+      </span>
+
+    </label>
+
+
+    <p class="text-xs text-slate-500 mt-2">
+      قطارهای اضطراری در تعیین اولویت اعزام، اهمیت بیشتری دارند.
+    </p>
+
+
+    <!-- Actions -->
+
+    <div class="flex flex-wrap gap-2 mt-5">
+
+      <button onclick="addTrain()"
+              class="bg-teal-600 hover:bg-teal-500 rounded-xl px-5 py-3 transition">
+        ➕ افزودن قطار
+      </button>
+
+      <button onclick="peekTrain()"
+              class="bg-blue-600 hover:bg-blue-500 rounded-xl px-5 py-3 transition">
+        👀 مشاهده قطار بعدی
+      </button>
+
+      <button onclick="dispatchTrain()"
+              class="bg-indigo-600 hover:bg-indigo-500 rounded-xl px-5 py-3 transition">
+        🚆 اعزام قطار بعدی
+      </button>
+
+      <button onclick="removeTrain()"
+              class="bg-red-600 hover:bg-red-500 rounded-xl px-5 py-3 transition">
+        🗑️ حذف قطار
+      </button>
+
+    </div>
+
+
+    <div id="queue-result"
+         class="result mt-4"></div>
+
+  </div>
+
+
+
+  <!-- ================================================= -->
+  <!-- T3.3 — Analytics -->
+  <!-- ================================================= -->
+
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
+
+    <div class="flex items-start gap-3 mb-5">
+
+      <div class="text-2xl">📊</div>
+
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.3 — تحلیل آمار سفرها
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          اطلاعات سفرهای انجام‌شده را ثبت کنید و
+          میانگین سفرهای روزانه یا پرترددترین ایستگاه‌ها را بررسی کنید.
+        </p>
+      </div>
+
+    </div>
+
+
+    <!-- Record trip -->
+
+    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+      <h4 class="font-semibold mb-4">
+        ثبت اطلاعات سفر
+      </h4>
+
+
+      <div class="grid md:grid-cols-3 gap-4">
+
+        <div>
+          <label for="tripDate"
+                 class="block text-sm font-medium mb-2">
+            تاریخ
+          </label>
+
+          <input id="tripDate"
+                 class="input"
+                 placeholder="1405-05-26"
+                 type="text">
+        </div>
+
+
+        <div>
+          <label for="tripStation"
+                 class="block text-sm font-medium mb-2">
+            ایستگاه
+          </label>
+
+          <select id="tripStation"
+                  class="input">
+          </select>
+        </div>
+
+
+        <div>
+          <label for="tripCount"
+                 class="block text-sm font-medium mb-2">
+            تعداد سفر
+          </label>
+
+          <input id="tripCount"
+                 class="input"
+                 type="number"
+                 min="1"
+                 value="1">
+        </div>
+
+      </div>
+
+
+      <button onclick="recordTrip()"
+              class="mt-4 bg-teal-600 hover:bg-teal-500 rounded-xl px-5 py-3 transition">
+        ➕ ثبت سفر
+      </button>
+
+    </div>
+
+
+    <!-- Analytics actions -->
+
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+        <h4 class="font-semibold">
+          میانگین سفر روزانه
+        </h4>
+
+        <p class="text-xs text-slate-500 mt-2 mb-4">
+          میانگین تعداد سفرهای ثبت‌شده در هر روز را محاسبه می‌کند.
+        </p>
+
+        <button onclick="averageTrips()"
+                class="w-full bg-blue-600 hover:bg-blue-500 rounded-xl p-3 transition">
+          📈 محاسبه میانگین
+        </button>
+
+      </div>
+
+
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+        <h4 class="font-semibold">
+          پرترددترین ایستگاه
+        </h4>
+
+        <p class="text-xs text-slate-500 mt-2 mb-4">
+          رتبه ایستگاه موردنظر را بر اساس تعداد سفر مشخص کنید.
+        </p>
+
+
+        <div class="flex gap-2">
+
+          <input id="kValue"
+                 class="input"
+                 type="number"
+                 min="1"
+                 value="1"
+                 placeholder="مثلاً 1">
+
+          <button onclick="kthStation()"
+                  class="bg-purple-600 hover:bg-purple-500 rounded-xl px-5 transition whitespace-nowrap">
+            🔍 پیدا کردن
+          </button>
 
         </div>
+
+        <p class="text-xs text-slate-500 mt-2">
+          مثال: عدد 1 یعنی پرترددترین ایستگاه.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div id="analytics-result"
+         class="result mt-4"></div>
+
+  </div>
+
+
+
+  <!-- ================================================= -->
+  <!-- T3.4 — Simulation -->
+  <!-- ================================================= -->
+
+  <div class="border border-white/10 rounded-2xl p-5">
+
+    <div class="flex items-start gap-3 mb-5">
+
+      <div class="text-2xl">👥</div>
+
+      <div>
+
+        <h3 class="text-xl font-bold">
+          T3.4 — شبیه‌سازی ورود مسافران
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          ورود تصادفی مسافران و عملکرد گیت‌های ورودی را
+          در یک بازه زمانی شبیه‌سازی می‌کند.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <div>
+        <label for="numGates"
+               class="block text-sm font-medium mb-2">
+          تعداد گیت‌ها
+        </label>
+
+        <input id="numGates"
+               class="input"
+               type="number"
+               min="1"
+               value="2">
+
+        <p class="text-xs text-slate-500 mt-1">
+          تعداد گیت‌هایی که همزمان مسافران را پردازش می‌کنند.
+        </p>
+      </div>
+
+
+      <div>
+        <label for="duration"
+               class="block text-sm font-medium mb-2">
+          مدت شبیه‌سازی
+          <span class="text-slate-500">(دقیقه)</span>
+        </label>
+
+        <input id="duration"
+               class="input"
+               type="number"
+               min="1"
+               value="60">
+
+      </div>
+
+
+      <div>
+        <label for="arrivalRate"
+               class="block text-sm font-medium mb-2">
+          میانگین ورود مسافر
+          <span class="text-slate-500">(مسافر در دقیقه)</span>
+        </label>
+
+        <input id="arrivalRate"
+               class="input"
+               type="number"
+               min="0.01"
+               step="0.1"
+               value="1">
+
+        <p class="text-xs text-slate-500 mt-1">
+          مثلاً 1 یعنی به‌طور میانگین یک مسافر در هر دقیقه.
+        </p>
+      </div>
+
+
+      <div>
+        <label for="serviceTime"
+               class="block text-sm font-medium mb-2">
+          زمان سرویس هر مسافر
+          <span class="text-slate-500">(ثانیه)</span>
+        </label>
+
+        <input id="serviceTime"
+               class="input"
+               type="number"
+               min="0.1"
+               step="0.1"
+               value="3">
+
+      </div>
+
+    </div>
+
+
+    <!-- Seed -->
+
+    <div class="mt-4">
+
+      <label for="seed"
+             class="block text-sm font-medium mb-2">
+        بذر تصادفی
+        <span class="text-slate-500">(اختیاری)</span>
+      </label>
+
+      <input id="seed"
+             class="input"
+             type="number"
+             placeholder="مثلاً 42">
+
+      <p class="text-xs text-slate-500 mt-1">
+        اگر یک عدد مشخص وارد کنید، اجرای بعدی با همان عدد
+        نتایج قابل تکرارتری ایجاد می‌کند.
+      </p>
+
+    </div>
+
+
+    <button onclick="simulate()"
+            class="mt-5 bg-cyan-600 hover:bg-cyan-500 rounded-xl px-6 py-3 transition">
+      ▶ اجرای شبیه‌سازی
+    </button>
+
+
+    <div id="simulation-result"
+         class="result mt-4"></div>
+
+  </div>
+
+</section>
+    <!-- FLOYD -->
+      <section id="section-allpairs"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.1 — Floyd-Warshall</h2>
+
+        <select id="floydCriterion" class="input mt-5">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="floyd()"
+                class="mt-4 bg-purple-600 rounded-xl px-6 py-3">
+          محاسبه ماتریس
+        </button>
+
+        <div id="floyd-result"
+             class="result mt-5 overflow-auto"></div>
+      </section>
+      <!-- MAX FLOW -->
+      <section id="section-flow"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.2 — Maximum Flow</h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="flowStart" class="input"></select>
+          <select id="flowGoal" class="input"></select>
+        </div>
+
+        <button onclick="maxFlow()"
+                class="mt-4 bg-blue-600 rounded-xl px-6 py-3">
+          محاسبه Max Flow
+        </button>
+
+        <div id="flow-result" class="result mt-5"></div>
+      </section>
+
+  
+
+      <!-- CRITICAL -->
+      <section id="section-critical"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.3 — نقاط بحرانی و پل‌ها</h2>
+
+        <button onclick="critical()"
+                class="mt-4 bg-red-600 rounded-xl px-6 py-3">
+          تحلیل شبکه
+        </button>
+
+        <div id="critical-result" class="result mt-5"></div>
+      </section>
+
+      <!-- DOMINATING -->
+      <section id="section-dominating"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.4 — Dominating Set</h2>
+
+        <button onclick="dominating()"
+                class="mt-4 bg-cyan-600 rounded-xl px-6 py-3">
+          اجرای الگوریتم تقریبی
+        </button>
+
+        <div id="dominating-result" class="result mt-5"></div>
+      </section>
+
+      <!-- SEARCH -->
+      <section id="section-search"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T4.5 — جستجوی تحمل خطای تایپی
+        </h2>
+
+        <input id="searchInput"
+               class="input mt-5"
+               placeholder="نام ایستگاه">
+
+        <button onclick="searchStation()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          جستجو
+        </button>
+
+        <div id="search-result" class="result mt-5"></div>
+      </section>
+
+      <!-- T5 -->
+      <section id="section-innovation"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T5 — مقایسه Dijkstra و Bidirectional Dijkstra
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="compareStart" class="input"></select>
+          <select id="compareGoal" class="input"></select>
+        </div>
+
+        <select id="compareCriterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="compareRouting()"
+                class="mt-4 bg-indigo-600 rounded-xl px-6 py-3">
+          مقایسه
+        </button>
+
+        <div id="compare-result" class="result mt-5"></div>
+      </section>
+
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+async function api(url, options = {}) {
+  const response = await fetch(url, options);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.detail || data.error || `HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function show(name, button) {
+  document.querySelectorAll("[id^='section-']")
+    .forEach(x => x.classList.add("hidden-section"));
+
+  $(`section-${name}`).classList.remove("hidden-section");
+
+  document.querySelectorAll(".sidebar-button")
+    .forEach(x => x.classList.remove("active"));
+
+  button.classList.add("active");
+}
+
+function fillSelect(id, stations) {
+  const select = $(id);
+
+  if (!select) return;
+
+  select.innerHTML = stations
+    .map(x => `<option value="${esc(x)}">${esc(x)}</option>`)
+    .join("");
+}
+
+async function loadStations() {
+  const data = await api("/api/stations");
+
+  const stations = data.stations;
+
+  [
+    "start",
+    "goal",
+    "bellmanStart",
+    "flowStart",
+    "flowGoal",
+    "tripStation",
+    "compareStart",
+    "compareGoal"
+  ].forEach(id => fillSelect(id, stations));
+
+  const dag = await api("/api/dag");
+
+  fillSelect("dagStart", dag.express_line);
+  fillSelect("dagGoal", dag.express_line);
+
+  $("status").innerHTML =
+    `متصل — ${stations.length} ایستگاه`;
+}
+
+async function shortestPath() {
+  try {
+    const data = await api("/api/shortest-path", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("start").value,
+        goal: $("goal").value,
+        criterion: $("criterion").value
+      })
+    });
+
+    $("routing-result").innerHTML = `
+      <b>مسیر:</b>
+      ${data.path ? data.path.map(esc).join(" ← ") : "یافت نشد"}
+      <br>
+      <b>هزینه:</b> ${data.cost ?? "∞"}
     `;
+  } catch (e) {
+    $("routing-result").innerHTML = esc(e.message);
+  }
+}
+
+async function reachability() {
+  try {
+    const data = await api("/api/reachability", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("start").value,
+        goal: $("goal").value
+      })
+    });
+
+    $("routing-result").innerHTML = `
+      <b>قابل دسترسی:</b>
+      ${data.reachable ? "بله" : "خیر"}
+      <hr class="my-3">
+      <b>BFS:</b>
+      ${data.bfs_path?.map(esc).join(" ← ") ?? "یافت نشد"}
+      <hr class="my-3">
+      <b>DFS:</b>
+      ${data.dfs_path?.map(esc).join(" ← ") ?? "یافت نشد"}
+    `;
+  } catch (e) {
+    $("routing-result").innerHTML = esc(e.message);
+  }
+}
+
+async function mst() {
+  try {
+    const data = await api(
+      `/api/mst?criterion=${encodeURIComponent($("mstCriterion").value)}`
+    );
+
+    $("mst-result").innerHTML = `
+      <b>Kruskal:</b> ${data.kruskal_cost}
+      <br>
+      <b>Prim:</b> ${data.prim_cost}
+      <br>
+      <b>برابر:</b> ${data.same_cost ? "بله" : "خیر"}
+      <hr class="my-3">
+      ${data.kruskal_edges.map(
+        e => `${esc(e.source)} ↔ ${esc(e.destination)} = ${e.weight}`
+      ).join("<br>")}
+    `;
+  } catch (e) {
+    $("mst-result").innerHTML = esc(e.message);
+  }
+}
+
+async function loadDAG() {
+  try {
+    const data = await api("/api/dag");
+
+    $("dag-result").innerHTML = `
+      <b>DAG:</b> ${data.is_dag ? "بله" : "خیر"}
+      <br><br>
+      <b>خط Express:</b><br>
+      ${data.express_line.map(esc).join(" → ")}
+      <hr class="my-3">
+      <b>Topological Order:</b><br>
+      ${data.topological_order.map(esc).join(" → ")}
+    `;
+  } catch (e) {
+    $("dag-result").innerHTML = esc(e.message);
+  }
+}
+
+async function dagPath() {
+  try {
+    const data = await api("/api/dag-shortest-path", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("dagStart").value,
+        goal: $("dagGoal").value,
+        criterion: $("dagCriterion").value
+      })
+    });
+
+    $("dag-path-result").innerHTML = `
+      <b>مسیر:</b>
+      ${data.path ? data.path.map(esc).join(" → ") : "یافت نشد"}
+      <br>
+      <b>هزینه:</b> ${data.cost ?? "∞"}
+    `;
+  } catch (e) {
+    $("dag-path-result").innerHTML = esc(e.message);
+  }
+}
+
+async function bellman() {
+  try {
+    const data = await api("/api/bellman-ford", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        station: $("bellmanStart").value,
+        criterion: $("bellmanCriterion").value
+      })
+    });
+
+    $("bellman-result").innerHTML = `
+      <b>
+        ${data.has_negative_cycle
+          ? "چرخه منفی شناسایی شد"
+          : "چرخه منفی وجود ندارد"}
+      </b>
+
+      ${
+        data.negative_cycle?.length
+          ? `<br>چرخه:
+             ${data.negative_cycle.map(esc).join(" → ")}`
+          : ""
       }
 
-      function escapeHtml(value) {
-        if (value === null || value === undefined) {
-          return "";
-        }
+      <hr class="my-3">
 
-        return String(value)
-          .replaceAll("&", "&amp;")
-          .replaceAll("<", "&lt;")
-          .replaceAll(">", "&gt;")
-          .replaceAll('"', "&quot;")
-          .replaceAll("'", "&#039;");
+      ${Object.entries(data.distances)
+        .map(
+          ([station, value]) =>
+            `${esc(station)} : ${value ?? "∞"}`
+        )
+        .join("<br>")}
+    `;
+  } catch (e) {
+    $("bellman-result").innerHTML = esc(e.message);
+  }
+}
+
+async function scheduleTrains() {
+  try {
+    const trains = JSON.parse(
+      $("scheduleInput").value
+    );
+
+    const data = await api(
+      "/api/t3/trains/schedule",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({trains})
       }
+    );
 
-      function switchSection(name, button) {
-        document.querySelectorAll("[id^='section-']").forEach((section) => {
-          section.classList.add("hidden-section");
-        });
+    $("schedule-result").innerHTML = `
+      <b>تعداد قطار انتخاب‌شده:</b>
+      ${data.selected_count}
+      <hr class="my-3">
+      ${data.selected_trains.map(
+        t =>
+          `${esc(t.train_id)}:
+           ${t.arrival_time} → ${t.departure_time}`
+      ).join("<br>")}
+    `;
+  } catch (e) {
+    $("schedule-result").innerHTML = esc(e.message);
+  }
+}
 
-        const section = $(`section-${name}`);
+function trainPayload() {
+  return {
+    train_id: $("trainId").value,
+    arrival_time: Number($("arrivalTime").value),
+    departure_time: Number($("departureTime").value),
+    delay_minutes: Number($("delay").value),
+    is_emergency: $("emergency").checked
+  };
+}
 
-        if (section) {
-          section.classList.remove("hidden-section");
-        }
-
-        document.querySelectorAll(".sidebar-button").forEach((btn) => {
-          btn.classList.remove("active");
-        });
-
-        if (button) {
-          button.classList.add("active");
-        }
+async function addTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/add",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          train: trainPayload()
+        })
       }
+    );
 
-      async function loadStations() {
-        try {
-          const data = await api("/api/stations");
+    $("queue-result").innerHTML =
+      `قطار اضافه شد: ${esc(data.added)}
+       <br>اندازه صف: ${data.queue_size}
+       <br>قطار بعدی: ${esc(data.next_train)}`;
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
 
-          const stations = data.stations || [];
+async function peekTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/next"
+    );
 
-          const selects = [
-            "start-station",
-            "goal-station",
-            "dag-start",
-            "dag-goal",
-            "bellman-start",
-            "flow-start",
-            "flow-goal",
-            "floyd-start",
-            "floyd-goal",
-            "compare-start",
-            "compare-goal",
-          ];
+    $("queue-result").innerHTML =
+      data.train
+        ? `قطار بعدی:
+           <b>${esc(data.train.train_id)}</b>
+           <br>Priority: ${data.train.priority}
+           <br>صف: ${data.queue_size}`
+        : "صف خالی است.";
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
 
-          selects.forEach((id) => {
-            const select = $(id);
+async function dispatchTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/dispatch",
+      {method: "POST"}
+    );
 
-            if (!select) {
-              return;
-            }
+    $("queue-result").innerHTML =
+      data.train
+        ? `قطار اعزام شد:
+           <b>${esc(data.train.train_id)}</b>
+           <br>Priority: ${data.train.priority}
+           <br>صف باقی‌مانده: ${data.queue_size}`
+        : "صف خالی است.";
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
 
-            select.innerHTML = "";
+async function removeTrain() {
+  try {
+    const id = encodeURIComponent(
+      $("trainId").value
+    );
 
-            stations.forEach((station) => {
-              const option = document.createElement("option");
+    const data = await api(
+      `/api/t3/dispatch/${id}`,
+      {method: "DELETE"}
+    );
 
-              option.value = station;
-              option.textContent = station;
+    $("queue-result").innerHTML =
+      `حذف:
+       ${data.removed ? "موفق" : "قطار یافت نشد"}
+       <br>صف: ${data.queue_size}`;
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
 
-              select.appendChild(option);
-            });
-          });
-
-          $("api-status").innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-            API متصل است
-        `;
-        } catch (error) {
-          $("api-status").innerHTML = `
-            <span class="w-2 h-2 rounded-full bg-red-400"></span>
-            خطا در API
-        `;
-
-          console.error(error);
-        }
+async function recordTrip() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/trips",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          date: $("tripDate").value,
+          station_id: $("tripStation").value,
+          count: Number($("tripCount").value)
+        })
       }
+    );
 
-      async function fetchShortestPath() {
-        const output = $("routing-results");
+    $("analytics-result").innerHTML =
+      `ثبت شد. تعداد رکوردها: ${data.total_records}`;
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
 
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه...</div>`;
+async function averageTrips() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/average-daily"
+    );
 
-          const start = $("start-station").value;
-          const goal = $("goal-station").value;
-          const criterion = $("criterion").value;
+    $("analytics-result").innerHTML =
+      `میانگین سفر روزانه:
+       <b>${data.average_daily_trips.toFixed(2)}</b>`;
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
 
-          const data = await api("/api/shortest-path", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start,
-              goal,
-              criterion,
-            }),
-          });
-
-          if (!data.path) {
-            output.innerHTML = `
-                <div class="text-red-400">
-                    مسیری بین دو ایستگاه یافت نشد.
-                </div>
-            `;
-
-            return;
-          }
-
-          const unit = criterion === "distance" ? "کیلومتر" : "دقیقه";
-
-          output.innerHTML = `
-
-            <div class="text-teal-300 font-bold mb-3">
-                کوتاه‌ترین مسیر با Dijkstra
-            </div>
-
-            <div class="text-slate-200 leading-8">
-                ${data.path.map(escapeHtml).join(" ← ")}
-            </div>
-
-            <div class="mt-4 text-sm text-slate-400">
-                هزینه کل:
-                <span class="text-white font-semibold">
-                    ${Number(data.cost).toFixed(2)}
-                </span>
-                ${unit}
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
+async function kthStation() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/kth-busiest",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          k: Number($("kValue").value)
+        })
       }
+    );
 
-      async function fetchReachability() {
-        const output = $("routing-results");
+    $("analytics-result").innerHTML =
+      data.found
+        ? `${data.k}امین ایستگاه پرتردد:
+           <b>${esc(data.station)}</b>
+           <br>تعداد سفر: ${data.trip_count}`
+        : "برای این K ایستگاهی وجود ندارد.";
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
 
-        try {
-          output.innerHTML = `<div class="loading">در حال بررسی...</div>`;
+async function simulate() {
+  try {
+    const seed =
+      $("seed").value === ""
+        ? null
+        : Number($("seed").value);
 
-          const data = await api("/api/reachability", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start: $("start-station").value,
-              goal: $("goal-station").value,
-            }),
-          });
-
-          output.innerHTML = `
-
-            <div class="font-bold text-teal-300 mb-4">
-                نتیجه بررسی دسترسی
-            </div>
-
-            <div class="mb-4">
-
-                <div class="text-sm text-slate-400 mb-2">
-                    مسیر BFS
-                </div>
-
-                <div>
-                    ${
-                      data.bfs_path
-                        ? data.bfs_path.map(escapeHtml).join(" ← ")
-                        : "مسیر یافت نشد"
-                    }
-                </div>
-
-            </div>
-
-            <div>
-
-                <div class="text-sm text-slate-400 mb-2">
-                    مسیر DFS
-                </div>
-
-                <div>
-                    ${
-                      data.dfs_path
-                        ? data.dfs_path.map(escapeHtml).join(" ← ")
-                        : "مسیر یافت نشد"
-                    }
-                </div>
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
+    const data = await api(
+      "/api/t3/simulation",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          num_gates: Number($("numGates").value),
+          duration_minutes: Number($("duration").value),
+          avg_arrivals_per_minute:
+            Number($("arrivalRate").value),
+          service_time_seconds:
+            Number($("serviceTime").value),
+          seed
+        })
       }
+    );
 
-      async function fetchMST() {
-        const output = $("mst-results");
+    $("simulation-result").innerHTML = `
+      <b>تعداد مسافران:</b>
+      ${data.passenger_count}
+      <br>
+      <b>میانگین انتظار:</b>
+      ${data.average_waiting_time_minutes.toFixed(3)}
+      دقیقه
+      <br>
+      <b>بیشترین انتظار:</b>
+      ${data.max_waiting_time_minutes.toFixed(3)}
+      دقیقه
+    `;
+  } catch (e) {
+    $("simulation-result").innerHTML = esc(e.message);
+  }
+}
 
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه MST...</div>`;
+async function maxFlow() {
+  try {
+    const data = await api("/api/max-flow", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("flowStart").value,
+        goal: $("flowGoal").value
+      })
+    });
 
-          const criterion = $("mst-criterion").value;
+    $("flow-result").innerHTML =
+      `Maximum Flow:
+       <b>${data.max_flow}</b>`;
+  } catch (e) {
+    $("flow-result").innerHTML = esc(e.message);
+  }
+}
 
-          const data = await api(
-            `/api/mst?criterion=${encodeURIComponent(criterion)}`,
-          );
+async function floyd() {
+  try {
+    const data = await api(
+      `/api/floyd-warshall?criterion=${
+        encodeURIComponent($("floydCriterion").value)
+      }`
+    );
 
-          output.innerHTML = `
+    let html = `
+      <b>
+        ${data.has_negative_cycle
+          ? "چرخه منفی وجود دارد"
+          : "چرخه منفی وجود ندارد"}
+      </b>
 
-            <div class="grid sm:grid-cols-2 gap-4 mb-6">
+      <table class="w-full text-xs mt-4">
+        <tr>
+          <th class="p-2">ایستگاه</th>
+          ${data.stations.map(
+            x => `<th class="p-2">${esc(x)}</th>`
+          ).join("")}
+        </tr>
+    `;
 
-                <div class="bg-slate-800/60 rounded-xl p-4">
-
-                    <div class="text-sm text-slate-400">
-                        هزینه Kruskal
-                    </div>
-
-                    <div class="text-xl font-bold mt-1">
-                        ${Number(data.kruskal_cost).toFixed(2)}
-                    </div>
-
-                </div>
-
-
-                <div class="bg-slate-800/60 rounded-xl p-4">
-
-                    <div class="text-sm text-slate-400">
-                        هزینه Prim
-                    </div>
-
-                    <div class="text-xl font-bold mt-1">
-                        ${Number(data.prim_cost).toFixed(2)}
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <h3 class="font-bold mb-3">
-                یال‌های انتخاب‌شده
-            </h3>
-
-            <div class="space-y-2">
-
-                ${(data.edges || [])
-                  .map(
-                    (edge) => `
-
-                        <div class="flex items-center justify-between
-                                    gap-4 border-b border-white/5
-                                    py-2 text-sm">
-
-                            <span>
-                                ${escapeHtml(edge.source)}
-                                ↔
-                                ${escapeHtml(edge.destination)}
-                            </span>
-
-                            <span class="text-teal-300">
-                                ${edge.weight}
-                            </span>
-
-                        </div>
-
-                    `,
-                  )
-                  .join("")}
-
-            </div>
-
+    data.distances.forEach(
+      (row, i) => {
+        html += `
+          <tr class="border-t border-white/10">
+            <td class="p-2">
+              ${esc(data.stations[i])}
+            </td>
+            ${row.map(
+              x => `<td class="p-2 text-center">
+                ${x ?? "∞"}
+              </td>`
+            ).join("")}
+          </tr>
         `;
-        } catch (error) {
-          showError(output, error);
-        }
       }
+    );
 
-      async function fetchDAG() {
-        const output = $("dag-order-result");
+    html += "</table>";
 
-        try {
-          const data = await api("/api/dag");
+    $("floyd-result").innerHTML = html;
+  } catch (e) {
+    $("floyd-result").innerHTML = esc(e.message);
+  }
+}
 
-          if (!data.is_dag) {
-            output.innerHTML = `
-                <div class="text-red-400">
-                    گراف DAG نیست.
-                </div>
-            `;
+async function critical() {
+  try {
+    const data = await api(
+      "/api/critical-nodes"
+    );
 
-            return;
-          }
+    $("critical-result").innerHTML = `
+      <b>Articulation Points</b>
+      <br>
+      ${(data.points || []).map(esc).join("<br>")}
+      <hr class="my-4">
+      <b>Bridges</b>
+      <br>
+      ${(data.bridges || [])
+        .map(
+          x => `${esc(x[0])} ↔ ${esc(x[1])}`
+        )
+        .join("<br>")}
+    `;
+  } catch (e) {
+    $("critical-result").innerHTML = esc(e.message);
+  }
+}
 
-          output.innerHTML = `
+async function dominating() {
+  try {
+    const data = await api(
+      "/api/dominating-set"
+    );
 
-            <div class="text-emerald-400 font-semibold">
-                گراف یک DAG معتبر است.
-            </div>
+    $("dominating-result").innerHTML = `
+      <b>تعداد:</b> ${data.count}
+      <hr class="my-3">
+      ${data.solution.map(esc).join("<br>")}
+    `;
+  } catch (e) {
+    $("dominating-result").innerHTML = esc(e.message);
+  }
+}
 
-            <div class="mt-3 text-sm leading-8">
-                ترتیب توپولوژیک:
-            </div>
+async function searchStation() {
+  try {
+    const q = encodeURIComponent(
+      $("searchInput").value.trim()
+    );
 
-            <div class="mt-2 text-slate-200">
-                ${(data.topological_order || []).map(escapeHtml).join(" → ")}
-            </div>
+    const data = await api(
+      `/api/search?q=${q}`
+    );
 
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
+    $("search-result").innerHTML =
+      data.results.map(
+        x =>
+          `${esc(x.name)}
+           — فاصله ویرایشی: ${x.distance}`
+      ).join("<br>");
+  } catch (e) {
+    $("search-result").innerHTML = esc(e.message);
+  }
+}
+
+async function compareRouting() {
+  try {
+    const data = await api(
+      "/api/compare-routing",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          start: $("compareStart").value,
+          goal: $("compareGoal").value,
+          criterion: $("compareCriterion").value
+        })
       }
-
-      async function fetchDAGShortestPath() {
-        const output = $("dag-path-result");
-
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه...</div>`;
-
-          const data = await api("/api/dag-shortest-path", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start: $("dag-start").value,
-              goal: $("dag-goal").value,
-              criterion: $("dag-criterion").value,
-            }),
-          });
-
-          if (!data.is_dag) {
-            output.innerHTML = `
-                <div class="text-red-400">
-                    گراف DAG نیست یا محاسبه مسیر امکان‌پذیر نیست.
-                </div>
-            `;
-
-            return;
-          }
-
-          output.innerHTML = `
-
-            <div class="font-semibold text-teal-300">
-                کوتاه‌ترین مسیر DAG
-            </div>
-
-            <div class="mt-3">
-                ${(data.path || []).map(escapeHtml).join(" ← ")}
-            </div>
-
-            <div class="mt-3 text-sm text-slate-400">
-                هزینه:
-                ${Number(data.cost).toFixed(2)}
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchBellmanFord() {
-        const output = $("bellman-results");
-
-        try {
-          output.innerHTML = `<div class="loading">در حال اجرای Bellman-Ford...</div>`;
-
-          const data = await api("/api/bellman-ford", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              station: $("bellman-start").value,
-              criterion: $("bellman-criterion").value,
-            }),
-          });
-
-          const distances = Object.entries(data.distances || {});
-
-          output.innerHTML = `
-
-            <div class="mb-5">
-
-                <div class="font-semibold
-                            ${
-                              data.has_negative_cycle
-                                ? "text-red-400"
-                                : "text-emerald-400"
-                            }">
-
-                    ${
-                      data.has_negative_cycle
-                        ? "چرخه منفی شناسایی شد"
-                        : "چرخه منفی وجود ندارد"
-                    }
-
-                </div>
-
-            </div>
-
-
-            <div class="grid sm:grid-cols-2 gap-2">
-
-                ${distances
-                  .map(
-                    ([station, distance]) => `
-
-                        <div class="flex justify-between
-                                    bg-slate-800/50
-                                    rounded-lg px-3 py-2 text-sm">
-
-                            <span>
-                                ${escapeHtml(station)}
-                            </span>
-
-                            <span class="text-teal-300">
-                                ${
-                                  distance === null
-                                    ? "∞"
-                                    : Number(distance).toFixed(2)
-                                }
-                            </span>
-
-                        </div>
-
-                    `,
-                  )
-                  .join("")}
-
-            </div>
-
-
-            ${
-              data.negative_cycle?.length
-                ? `
-
-                        <div class="mt-5 text-red-400">
-
-                            یال‌های مرتبط با چرخه منفی:
-
-                            <div class="mt-2">
-
-                                ${data.negative_cycle
-                                  .map(
-                                    (edge) =>
-                                      `${escapeHtml(edge[0])} → ${escapeHtml(edge[1])}`,
-                                  )
-                                  .join("<br>")}
-
-                            </div>
-
-                        </div>
-
-                    `
-                : ""
-            }
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchMaxFlow() {
-        const output = $("flow-results");
-
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه جریان...</div>`;
-
-          const data = await api("/api/max-flow", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start: $("flow-start").value,
-              goal: $("flow-goal").value,
-            }),
-          });
-
-          output.innerHTML = `
-
-            <div class="text-sm text-slate-400">
-                Maximum Flow
-            </div>
-
-            <div class="text-3xl font-bold text-blue-400 mt-2">
-                ${data.max_flow}
-            </div>
-
-            <div class="text-sm text-slate-400 mt-3">
-
-                ${escapeHtml(data.source)}
-                →
-                ${escapeHtml(data.sink)}
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchFloydWarshall() {
-        const output = $("floyd-results");
-
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه ماتریس...</div>`;
-
-          const criterion = $("floyd-criterion").value;
-
-          const data = await api(
-            `/api/floyd-warshall?criterion=${encodeURIComponent(criterion)}`,
-          );
-
-          let html = `
-
-            <div class="mb-4">
-
-                ${
-                  data.has_negative_cycle
-                    ? `<span class="text-red-400">
-                               چرخه منفی وجود دارد
-                           </span>`
-                    : `<span class="text-emerald-400">
-                               چرخه منفی وجود ندارد
-                           </span>`
-                }
-
-            </div>
-
-
-            <table class="w-full text-xs">
-
-                <thead>
-
-                    <tr class="border-b border-white/10">
-
-                        <th class="p-2 text-right">
-                            ایستگاه
-                        </th>
-
-                        ${data.stations
-                          .map(
-                            (station) => `
-                                    <th class="p-2 whitespace-nowrap">
-                                        ${escapeHtml(station)}
-                                    </th>
-                                `,
-                          )
-                          .join("")}
-
-                    </tr>
-
-                </thead>
-
-                <tbody>
-
-        `;
-
-          data.distances.forEach((row, index) => {
-            html += `
-
-                <tr class="table-row border-b border-white/5">
-
-                    <td class="p-2 font-semibold whitespace-nowrap">
-
-                        ${escapeHtml(data.stations[index])}
-
-                    </td>
-
-                    ${row
-                      .map(
-                        (value) => `
-
-                            <td class="p-2 text-center">
-
-                                ${
-                                  value === null
-                                    ? "∞"
-                                    : Number(value).toFixed(1)
-                                }
-
-                            </td>
-
-                        `,
-                      )
-                      .join("")}
-
-                </tr>
-
-            `;
-          });
-
-          html += `
-                </tbody>
-            </table>
-        `;
-
-          output.innerHTML = html;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchFloydPath() {
-        const output = $("floyd-path-result");
-
-        try {
-          const data = await api("/api/floyd-warshall/path", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start: $("floyd-start").value,
-              goal: $("floyd-goal").value,
-              criterion: $("floyd-criterion").value,
-            }),
-          });
-
-          if (!data.path) {
-            output.innerHTML = `
-                <div class="text-red-400">
-                    مسیری یافت نشد.
-                </div>
-            `;
-
-            return;
-          }
-
-          output.innerHTML = `
-
-            <div>
-                ${data.path.map(escapeHtml).join(" ← ")}
-            </div>
-
-            <div class="text-sm text-slate-400 mt-3">
-
-                هزینه:
-                ${Number(data.cost).toFixed(2)}
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchCriticalNodes() {
-        const output = $("critical-results");
-
-        try {
-          output.innerHTML = `<div class="loading col-span-full">
-                در حال تحلیل شبکه...
-             </div>`;
-
-          const data = await api("/api/critical-nodes");
-
-          output.innerHTML = `
-
-            <div class="result-box rounded-xl p-5">
-
-                <h3 class="font-bold text-amber-300 mb-4">
-                    نقاط برشی
-                </h3>
-
-                <div class="space-y-2">
-
-                    ${
-                      (data.points || []).length
-                        ? data.points
-                            .map(
-                              (point) => `
-                                        <div class="bg-slate-800/50
-                                                    rounded-lg px-3 py-2">
-                                            ${escapeHtml(point)}
-                                        </div>
-                                    `,
-                            )
-                            .join("")
-                        : `
-                                <div class="text-slate-400">
-                                    هیچ نقطه برشی یافت نشد.
-                                </div>
-                            `
-                    }
-
-                </div>
-
-            </div>
-
-
-            <div class="result-box rounded-xl p-5">
-
-                <h3 class="font-bold text-red-300 mb-4">
-                    پل‌ها
-                </h3>
-
-                <div class="space-y-2">
-
-                    ${
-                      (data.bridges || []).length
-                        ? data.bridges
-                            .map(
-                              (bridge) => `
-                                        <div class="bg-slate-800/50
-                                                    rounded-lg px-3 py-2">
-
-                                            ${escapeHtml(bridge[0])}
-                                            ↔
-                                            ${escapeHtml(bridge[1])}
-
-                                        </div>
-                                    `,
-                            )
-                            .join("")
-                        : `
-                                <div class="text-slate-400">
-                                    هیچ پلی یافت نشد.
-                                </div>
-                            `
-                    }
-
-                </div>
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchDominatingSet() {
-        const output = $("dominating-results");
-
-        try {
-          output.innerHTML = `<div class="loading">در حال محاسبه...</div>`;
-
-          const data = await api("/api/dominating-set");
-
-          output.innerHTML = `
-
-            <div class="text-sm text-slate-400">
-                تعداد ایستگاه‌های انتخاب‌شده
-            </div>
-
-            <div class="text-3xl font-bold text-cyan-400 mt-1">
-                ${data.count}
-            </div>
-
-            <div class="mt-5 flex flex-wrap gap-2">
-
-                ${(data.solution || [])
-                  .map(
-                    (station) => `
-                                <span class="px-3 py-2
-                                             rounded-lg
-                                             bg-cyan-500/10
-                                             border border-cyan-500/20
-                                             text-cyan-300">
-
-                                    ${escapeHtml(station)}
-
-                                </span>
-                            `,
-                  )
-                  .join("")}
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchSearch() {
-        const output = $("search-results");
-
-        const query = $("search-query").value.trim();
-
-        if (!query) {
-          output.innerHTML = `
-            <div class="text-amber-400">
-                لطفاً نام ایستگاه را وارد کنید.
-            </div>
-        `;
-
-          return;
-        }
-
-        try {
-          output.innerHTML = `<div class="loading">در حال جستجو...</div>`;
-
-          const data = await api(`/api/search?q=${encodeURIComponent(query)}`);
-
-          output.innerHTML = `
-
-            <div class="font-semibold mb-4">
-                نزدیک‌ترین نتایج برای:
-                <span class="text-teal-300">
-                    ${escapeHtml(query)}
-                </span>
-            </div>
-
-
-            <div class="space-y-2">
-
-                ${
-                  (data.results || []).length
-                    ? data.results
-                        .map(
-                          (result) => `
-
-                                    <div class="flex items-center
-                                                justify-between
-                                                gap-4
-                                                bg-slate-800/50
-                                                rounded-xl
-                                                px-4 py-3">
-
-                                        <span>
-                                            ${escapeHtml(result.name)}
-                                        </span>
-
-                                        <span class="text-sm
-                                                     text-teal-300">
-
-                                            فاصله:
-                                            ${result.distance}
-
-                                        </span>
-
-                                    </div>
-
-                                `,
-                        )
-                        .join("")
-                    : `
-                            <div class="text-slate-400">
-                                نتیجه‌ای یافت نشد.
-                            </div>
-                        `
-                }
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      async function fetchComparison() {
-        const output = $("compare-results");
-
-        try {
-          output.innerHTML = `<div class="loading col-span-full">
-                در حال مقایسه الگوریتم‌ها...
-             </div>`;
-
-          const data = await api("/api/compare-routing", {
-            method: "POST",
-
-            headers: {
-              "Content-Type": "application/json",
-            },
-
-            body: JSON.stringify({
-              start: $("compare-start").value,
-              goal: $("compare-goal").value,
-              criterion: $("compare-criterion").value,
-            }),
-          });
-
-          const uni = data.unidirectional;
-          const bi = data.bidirectional;
-
-          output.innerHTML = `
-
-            <div class="result-box rounded-xl p-5">
-
-                <div class="text-sm text-slate-400">
-                    Dijkstra معمولی
-                </div>
-
-                <div class="font-bold mt-2">
-                    مسیر
-                </div>
-
-                <div class="text-sm mt-2 leading-7">
-                    ${
-                      uni.path
-                        ? uni.path.map(escapeHtml).join(" ← ")
-                        : "یافت نشد"
-                    }
-                </div>
-
-                <div class="mt-4 text-sm">
-
-                    هزینه:
-                    <span class="text-teal-300">
-                        ${uni.cost}
-                    </span>
-
-                </div>
-
-                <div class="mt-2 text-sm">
-
-                    گره‌های بررسی‌شده:
-                    <span class="text-teal-300">
-                        ${uni.expanded_nodes}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="result-box rounded-xl p-5">
-
-                <div class="text-sm text-slate-400">
-                    Bidirectional Dijkstra
-                </div>
-
-                <div class="font-bold mt-2">
-                    مسیر
-                </div>
-
-                <div class="text-sm mt-2 leading-7">
-                    ${
-                      bi.path ? bi.path.map(escapeHtml).join(" ← ") : "یافت نشد"
-                    }
-                </div>
-
-                <div class="mt-4 text-sm">
-
-                    هزینه:
-                    <span class="text-teal-300">
-                        ${bi.cost}
-                    </span>
-
-                </div>
-
-                <div class="mt-2 text-sm">
-
-                    گره‌های بررسی‌شده:
-                    <span class="text-teal-300">
-                        ${bi.expanded_nodes}
-                    </span>
-
-                </div>
-
-            </div>
-
-
-            <div class="col-span-full
-                        bg-slate-800/40
-                        rounded-xl
-                        p-4
-                        text-center">
-
-                ${
-                  data.costs_match
-                    ? `
-                            <span class="text-emerald-400">
-                                هزینه دو الگوریتم برابر است.
-                            </span>
-                          `
-                    : `
-                            <span class="text-red-400">
-                                هزینه دو الگوریتم برابر نیست.
-                            </span>
-                          `
-                }
-
-            </div>
-
-        `;
-        } catch (error) {
-          showError(output, error);
-        }
-      }
-
-      window.addEventListener("DOMContentLoaded", () => {
-        loadStations();
-      });
-    </script>
-  </body>
+    );
+
+    $("compare-result").innerHTML = `
+      <b>Dijkstra:</b>
+      ${data.unidirectional.cost}
+      <br>
+      Nodes:
+      ${data.unidirectional.expanded_nodes}
+
+      <hr class="my-3">
+
+      <b>Bidirectional Dijkstra:</b>
+      ${data.bidirectional.cost}
+      <br>
+      Nodes:
+      ${data.bidirectional.expanded_nodes}
+
+      <hr class="my-3">
+
+      هزینه‌ها:
+      ${data.costs_match ? "برابر" : "متفاوت"}
+    `;
+  } catch (e) {
+    $("compare-result").innerHTML = esc(e.message);
+  }
+}
+
+window.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+    try {
+      await loadStations();
+    } catch (e) {
+      $("status").innerHTML =
+        `خطا: ${esc(e.message)}`;
+    }
+  }
+);
+</script>
+
+</body>
 </html>

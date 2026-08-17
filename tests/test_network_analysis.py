@@ -18,7 +18,6 @@ from algorithms.levenshtein import levenshtein_distance, find_closest_station
 from algorithms.dijkstra import dijkstra_shortest_path
 from utils.loader import build_graph_from_files, apply_capacities_from_file
 
-
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 STATIONS_PATH = os.path.join(DATA_DIR, "stations.txt")
 EDGES_PATH = os.path.join(DATA_DIR, "edges.txt")
