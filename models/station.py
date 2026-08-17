@@ -3,7 +3,6 @@ from typing import Any, Dict, Optional
 
 
 class Station:
-
     __slots__ = ("station_id", "name", "metadata")
 
     def __init__(

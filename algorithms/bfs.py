@@ -24,10 +24,8 @@ def bfs_traversal(graph: Graph, start_id: str) -> List[str]:
     return order
 
 
-def bfs_shortest_path(
-    graph: Graph, start_id: str, goal_id: str
-) -> Optional[List[str]]:
-  
+def bfs_shortest_path(graph: Graph, start_id: str, goal_id: str) -> Optional[List[str]]:
+
     if not graph.has_station(start_id) or not graph.has_station(goal_id):
         return None
 
@@ -48,7 +46,6 @@ def bfs_shortest_path(
             parent[neighbor] = current
 
             if neighbor == goal_id:
-
                 path = [goal_id]
                 while path[-1] != start_id:
                     path.append(parent[path[-1]])
@@ -57,9 +54,9 @@ def bfs_shortest_path(
 
             queue.append(neighbor)
 
-    return None 
+    return None
 
 
 def is_reachable_bfs(graph: Graph, start_id: str, goal_id: str) -> bool:
-  
+
     return bfs_shortest_path(graph, start_id, goal_id) is not None

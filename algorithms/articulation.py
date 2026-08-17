@@ -30,7 +30,6 @@ def find_articulation_points_and_bridges(
             for edge in neighbor_iter:
                 v = edge.destination
                 if v == parent.get(u):
-
                     continue
 
                 if v not in disc:
@@ -43,7 +42,6 @@ def find_articulation_points_and_bridges(
                     descended = True
                     break
                 else:
-
                     low[u] = min(low[u], disc[v])
 
             if descended:

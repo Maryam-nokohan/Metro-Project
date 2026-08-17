@@ -1,5 +1,5 @@
 """
-    python -m unittest tests/test_graph.py -v
+python -m unittest tests/test_graph.py -v
 """
 
 import unittest
@@ -33,7 +33,7 @@ class TestStation(unittest.TestCase):
     def test_equality_and_hash_based_on_id(self):
         s1 = Station("A", name="ایستگاه ۱")
         s2 = Station("A", name="نام دیگر")
-        self.assertEqual(s1, s2) 
+        self.assertEqual(s1, s2)
         self.assertEqual(hash(s1), hash(s2))
 
     def test_empty_id_raises(self):

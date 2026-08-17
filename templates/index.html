@@ -1,0 +1,1532 @@
+<!-- templates/index.html -->
+
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>سامانه مدیریت و مسیریابی متروی قم</title>
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <style>
+    body {
+      font-family: Tahoma, Arial, sans-serif;
+      background:
+        radial-gradient(circle at top right, rgba(20,184,166,.18), transparent 30%),
+        radial-gradient(circle at bottom left, rgba(59,130,246,.14), transparent 30%),
+        #020617;
+    }
+
+    .glass {
+      background: rgba(15,23,42,.82);
+      backdrop-filter: blur(18px);
+    }
+
+    .card {
+      background: rgba(15,23,42,.78);
+      border: 1px solid rgba(148,163,184,.13);
+      box-shadow: 0 20px 50px rgba(0,0,0,.18);
+    }
+
+    .input {
+      width: 100%;
+      padding: .75rem;
+      border-radius: .75rem;
+      background: rgba(30,41,59,.9);
+      border: 1px solid rgba(148,163,184,.2);
+      color: white;
+      outline: none;
+    }
+
+    .input:focus {
+      border-color: #2dd4bf;
+    }
+
+    .result {
+      background: rgba(2,6,23,.65);
+      border: 1px solid rgba(148,163,184,.12);
+      border-radius: .75rem;
+      padding: 1rem;
+    }
+
+    .hidden-section {
+      display: none;
+    }
+
+    .sidebar-button {
+      transition: .2s;
+    }
+
+    .sidebar-button.active {
+      background: rgba(20,184,166,.16);
+      border-color: rgba(45,212,191,.35);
+      color: #99f6e4;
+    }
+  </style>
+</head>
+
+<body class="min-h-screen text-slate-100">
+
+<header class="sticky top-0 z-50 border-b border-white/10 glass">
+  <div class="max-w-7xl mx-auto px-4 py-4">
+    <div class="flex justify-between items-center">
+      <div>
+        <h1 class="text-xl font-bold">
+          سامانه مدیریت و مسیریابی متروی قم
+        </h1>
+        <p class="text-xs text-slate-400 mt-1">
+          UrbanPulse Dynamics
+        </p>
+      </div>
+
+      <div id="status"
+           class="text-xs px-3 py-2 rounded-full bg-slate-800">
+        در حال اتصال...
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="max-w-7xl mx-auto px-4 py-8">
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <aside class="lg:col-span-3">
+      <div class="card rounded-2xl p-4 sticky top-24">
+        <h2 class="font-bold mb-4">کنترل پنل</h2>
+
+        <nav class="space-y-2">
+
+          <button onclick="show('routing',this)"
+                  class="sidebar-button active w-full text-right p-3 rounded-xl border border-transparent">
+            T1 — مسیریابی
+          </button>
+
+          <button onclick="show('mst',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.1 — MST
+          </button>
+
+          <button onclick="show('dag',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.3 — Express DAG
+          </button>
+
+          <button onclick="show('negative',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T2.4 — Bellman-Ford
+          </button>
+
+          <button onclick="show('operations',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T3 — عملیات روزانه
+          </button>
+
+          
+                    <button onclick="show('allpairs',this)"
+                            class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+                      T4.1 — Floyd-Warshall
+                    </button>
+          <button onclick="show('flow',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.2 — Max Flow
+          </button>
+
+          <button onclick="show('critical',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.3 — نقاط بحرانی
+          </button>
+
+          <button onclick="show('dominating',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.4 — Dominating Set
+          </button>
+
+          <button onclick="show('search',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T4.5 — جستجوی نام
+          </button>
+
+          <button onclick="show('innovation',this)"
+                  class="sidebar-button w-full text-right p-3 rounded-xl border border-transparent">
+            T5 — نوآوری
+          </button>
+
+        </nav>
+      </div>
+    </aside>
+
+    <section class="lg:col-span-9 space-y-6">
+
+      <!-- T1 -->
+      <section id="section-routing" class="card rounded-2xl p-6">
+        <h2 class="text-2xl font-bold">T1 — مسیریابی</h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="start" class="input"></select>
+          <select id="goal" class="input"></select>
+        </div>
+
+        <select id="criterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <div class="grid sm:grid-cols-3 gap-3 mt-4">
+          <button onclick="shortestPath()"
+                  class="bg-teal-600 rounded-xl p-3">
+            Dijkstra
+          </button>
+
+          <button onclick="reachability()"
+                  class="bg-slate-700 rounded-xl p-3">
+            BFS / DFS
+          </button>
+
+          <button onclick="compareRouting()"
+                  class="bg-indigo-600 rounded-xl p-3">
+            مقایسه
+          </button>
+        </div>
+
+        <div id="routing-result" class="result mt-5"></div>
+      </section>
+
+      <!-- MST -->
+      <section id="section-mst"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T2.1 / T2.2 — MST</h2>
+
+        <select id="mstCriterion" class="input mt-5">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="mst()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          محاسبه MST
+        </button>
+
+        <div id="mst-result" class="result mt-5"></div>
+      </section>
+
+      <!-- DAG -->
+      <section id="section-dag"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T2.3 — خط Express یک‌طرفه و DAG
+        </h2>
+
+        <p class="text-sm text-slate-400 mt-2">
+          خط Express به صورت واقعی روی یک گراف جهت‌دار مستقل
+          از گراف اصلی ساخته شده است.
+        </p>
+
+        <button onclick="loadDAG()"
+                class="mt-4 bg-indigo-600 rounded-xl px-6 py-3">
+          نمایش Express Line
+        </button>
+
+        <div id="dag-result" class="result mt-5"></div>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="dagStart" class="input"></select>
+          <select id="dagGoal" class="input"></select>
+        </div>
+
+        <select id="dagCriterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="dagPath()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          کوتاه‌ترین مسیر DAG
+        </button>
+
+        <div id="dag-path-result" class="result mt-5"></div>
+      </section>
+
+      <!-- NEGATIVE -->
+      <section id="section-negative"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T2.4 — Bellman-Ford و چرخه منفی
+        </h2>
+
+        <select id="bellmanStart" class="input mt-5"></select>
+
+        <select id="bellmanCriterion" class="input mt-4">
+          <option value="weight">وزن</option>
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="bellman()"
+                class="mt-4 bg-amber-600 rounded-xl px-6 py-3">
+          اجرای Bellman-Ford
+        </button>
+
+        <div id="bellman-result" class="result mt-5"></div>
+      </section>
+
+
+
+<section id="section-operations"
+         class="card rounded-2xl p-6 hidden-section">
+
+
+  <div class="mb-8">
+    <h2 class="text-2xl font-bold">
+      T3 — عملیات روزانه مترو
+    </h2>
+
+    <p class="text-sm text-slate-400 mt-2 leading-7">
+      ابزارهای مدیریت و تحلیل عملیات روزانه مترو؛
+      از زمان‌بندی قطارها و مدیریت اولویت اعزام
+      تا تحلیل سفرها و شبیه‌سازی ورود مسافران.
+    </p>
+  </div>
+
+
+
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
+
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-2xl">🚆</div>
+
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.1 — زمان‌بندی قطارها در سکو
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          بیشترین تعداد قطارهایی را پیدا می‌کند که می‌توانند
+          بدون تداخل زمانی از یک سکو استفاده کنند.
+        </p>
+      </div>
+    </div>
+
+
+    <div class="bg-slate-900/50 border border-white/5 rounded-xl p-4 mb-4">
+
+      <p class="text-sm font-medium mb-2">
+        اطلاعات قطارها
+      </p>
+
+      <p class="text-xs text-slate-500 leading-6">
+        برای هر قطار، شناسه، زمان ورود و زمان خروج را وارد کنید.
+        زمان‌ها را می‌توانید بر اساس دقیقه یا هر واحد زمانی دلخواه
+        وارد کنید.
+      </p>
+
+    </div>
+
+
+    <label for="scheduleInput"
+           class="block text-sm font-medium mb-2">
+      لیست قطارها
+    </label>
+<textarea id="scheduleInput"
+          class="input mt-1 h-52 font-mono text-sm"
+          dir="ltr">[
+  {
+    "train_id": "T1",
+    "arrival_time": 0,
+    "departure_time": 10
+  },
+  {
+    "train_id": "T2",
+    "arrival_time": 2,
+    "departure_time": 8
+  },
+  {
+    "train_id": "T3",
+    "arrival_time": 8,
+    "departure_time": 12
+  }
+]</textarea>
+
+
+    <div class="flex flex-wrap items-center gap-3 mt-4">
+
+      <button onclick="scheduleTrains()"
+              class="bg-teal-600 hover:bg-teal-500 rounded-xl px-6 py-3 transition">
+        🚆 پیدا کردن بهترین زمان‌بندی
+      </button>
+
+      <span class="text-xs text-slate-500">
+        مثال بالا را می‌توانید مستقیماً اجرا کنید.
+      </span>
+
+    </div>
+
+
+    <div id="schedule-result"
+         class="result mt-4"></div>
+
+  </div>
+
+
+
+
+
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
+
+    <div class="flex items-start gap-3 mb-5">
+      <div class="text-2xl">🚨</div>
+
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.2 — مدیریت اولویت اعزام قطارها
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          قطارها بر اساس میزان اولویت مرتب می‌شوند تا مشخص شود
+          کدام قطار باید زودتر اعزام شود.
+        </p>
+      </div>
+    </div>
+
+
+    <!-- Train information -->
+
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <div>
+        <label for="trainId"
+               class="block text-sm font-medium mb-2">
+          شناسه قطار
+        </label>
+
+        <input id="trainId"
+               class="input"
+               placeholder="مثلاً T1">
+      </div>
+
+
+      <div>
+        <label for="arrivalTime"
+               class="block text-sm font-medium mb-2">
+          زمان ورود
+        </label>
+
+        <input id="arrivalTime"
+               class="input"
+               type="number"
+               step="0.1"
+               placeholder="مثلاً 10">
+      </div>
+
+
+      <div>
+        <label for="departureTime"
+               class="block text-sm font-medium mb-2">
+          زمان خروج
+        </label>
+
+        <input id="departureTime"
+               class="input"
+               type="number"
+               step="0.1"
+               placeholder="مثلاً 15">
+      </div>
+
+
+      <div>
+        <label for="delay"
+               class="block text-sm font-medium mb-2">
+          میزان تأخیر
+          <span class="text-slate-500">(دقیقه)</span>
+        </label>
+
+        <input id="delay"
+               class="input"
+               type="number"
+               step="0.1"
+               min="0"
+               value="0"
+               placeholder="0">
+      </div>
+
+    </div>
+
+
+    <!-- Emergency -->
+
+    <label class="flex items-center gap-3 mt-5 cursor-pointer">
+
+      <input id="emergency"
+             type="checkbox"
+             class="w-4 h-4">
+
+      <span class="text-sm">
+        این قطار وضعیت اضطراری دارد
+      </span>
+
+    </label>
+
+
+    <p class="text-xs text-slate-500 mt-2">
+      قطارهای اضطراری در تعیین اولویت اعزام، اهمیت بیشتری دارند.
+    </p>
+
+
+    <!-- Actions -->
+
+    <div class="flex flex-wrap gap-2 mt-5">
+
+      <button onclick="addTrain()"
+              class="bg-teal-600 hover:bg-teal-500 rounded-xl px-5 py-3 transition">
+        ➕ افزودن قطار
+      </button>
+
+      <button onclick="peekTrain()"
+              class="bg-blue-600 hover:bg-blue-500 rounded-xl px-5 py-3 transition">
+        👀 مشاهده قطار بعدی
+      </button>
+
+      <button onclick="dispatchTrain()"
+              class="bg-indigo-600 hover:bg-indigo-500 rounded-xl px-5 py-3 transition">
+        🚆 اعزام قطار بعدی
+      </button>
+
+      <button onclick="removeTrain()"
+              class="bg-red-600 hover:bg-red-500 rounded-xl px-5 py-3 transition">
+        🗑️ حذف قطار
+      </button>
+
+    </div>
+
+
+    <div id="queue-result"
+         class="result mt-4"></div>
+
+  </div>
+
+
+
+  <!-- ================================================= -->
+  <!-- T3.3 — Analytics -->
+  <!-- ================================================= -->
+
+  <div class="border border-white/10 rounded-2xl p-5 mb-6">
+
+    <div class="flex items-start gap-3 mb-5">
+
+      <div class="text-2xl">📊</div>
+
+      <div>
+        <h3 class="text-xl font-bold">
+          T3.3 — تحلیل آمار سفرها
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          اطلاعات سفرهای انجام‌شده را ثبت کنید و
+          میانگین سفرهای روزانه یا پرترددترین ایستگاه‌ها را بررسی کنید.
+        </p>
+      </div>
+
+    </div>
+
+
+    <!-- Record trip -->
+
+    <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+      <h4 class="font-semibold mb-4">
+        ثبت اطلاعات سفر
+      </h4>
+
+
+      <div class="grid md:grid-cols-3 gap-4">
+
+        <div>
+          <label for="tripDate"
+                 class="block text-sm font-medium mb-2">
+            تاریخ
+          </label>
+
+          <input id="tripDate"
+                 class="input"
+                 placeholder="1405-05-26"
+                 type="text">
+        </div>
+
+
+        <div>
+          <label for="tripStation"
+                 class="block text-sm font-medium mb-2">
+            ایستگاه
+          </label>
+
+          <select id="tripStation"
+                  class="input">
+          </select>
+        </div>
+
+
+        <div>
+          <label for="tripCount"
+                 class="block text-sm font-medium mb-2">
+            تعداد سفر
+          </label>
+
+          <input id="tripCount"
+                 class="input"
+                 type="number"
+                 min="1"
+                 value="1">
+        </div>
+
+      </div>
+
+
+      <button onclick="recordTrip()"
+              class="mt-4 bg-teal-600 hover:bg-teal-500 rounded-xl px-5 py-3 transition">
+        ➕ ثبت سفر
+      </button>
+
+    </div>
+
+
+    <!-- Analytics actions -->
+
+    <div class="grid md:grid-cols-2 gap-4 mt-5">
+
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+        <h4 class="font-semibold">
+          میانگین سفر روزانه
+        </h4>
+
+        <p class="text-xs text-slate-500 mt-2 mb-4">
+          میانگین تعداد سفرهای ثبت‌شده در هر روز را محاسبه می‌کند.
+        </p>
+
+        <button onclick="averageTrips()"
+                class="w-full bg-blue-600 hover:bg-blue-500 rounded-xl p-3 transition">
+          📈 محاسبه میانگین
+        </button>
+
+      </div>
+
+
+      <div class="bg-slate-900/40 border border-white/5 rounded-xl p-4">
+
+        <h4 class="font-semibold">
+          پرترددترین ایستگاه
+        </h4>
+
+        <p class="text-xs text-slate-500 mt-2 mb-4">
+          رتبه ایستگاه موردنظر را بر اساس تعداد سفر مشخص کنید.
+        </p>
+
+
+        <div class="flex gap-2">
+
+          <input id="kValue"
+                 class="input"
+                 type="number"
+                 min="1"
+                 value="1"
+                 placeholder="مثلاً 1">
+
+          <button onclick="kthStation()"
+                  class="bg-purple-600 hover:bg-purple-500 rounded-xl px-5 transition whitespace-nowrap">
+            🔍 پیدا کردن
+          </button>
+
+        </div>
+
+        <p class="text-xs text-slate-500 mt-2">
+          مثال: عدد 1 یعنی پرترددترین ایستگاه.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div id="analytics-result"
+         class="result mt-4"></div>
+
+  </div>
+
+
+
+  <!-- ================================================= -->
+  <!-- T3.4 — Simulation -->
+  <!-- ================================================= -->
+
+  <div class="border border-white/10 rounded-2xl p-5">
+
+    <div class="flex items-start gap-3 mb-5">
+
+      <div class="text-2xl">👥</div>
+
+      <div>
+
+        <h3 class="text-xl font-bold">
+          T3.4 — شبیه‌سازی ورود مسافران
+        </h3>
+
+        <p class="text-sm text-slate-400 mt-2 leading-6">
+          ورود تصادفی مسافران و عملکرد گیت‌های ورودی را
+          در یک بازه زمانی شبیه‌سازی می‌کند.
+        </p>
+
+      </div>
+
+    </div>
+
+
+    <div class="grid md:grid-cols-2 gap-4">
+
+      <div>
+        <label for="numGates"
+               class="block text-sm font-medium mb-2">
+          تعداد گیت‌ها
+        </label>
+
+        <input id="numGates"
+               class="input"
+               type="number"
+               min="1"
+               value="2">
+
+        <p class="text-xs text-slate-500 mt-1">
+          تعداد گیت‌هایی که همزمان مسافران را پردازش می‌کنند.
+        </p>
+      </div>
+
+
+      <div>
+        <label for="duration"
+               class="block text-sm font-medium mb-2">
+          مدت شبیه‌سازی
+          <span class="text-slate-500">(دقیقه)</span>
+        </label>
+
+        <input id="duration"
+               class="input"
+               type="number"
+               min="1"
+               value="60">
+
+      </div>
+
+
+      <div>
+        <label for="arrivalRate"
+               class="block text-sm font-medium mb-2">
+          میانگین ورود مسافر
+          <span class="text-slate-500">(مسافر در دقیقه)</span>
+        </label>
+
+        <input id="arrivalRate"
+               class="input"
+               type="number"
+               min="0.01"
+               step="0.1"
+               value="1">
+
+        <p class="text-xs text-slate-500 mt-1">
+          مثلاً 1 یعنی به‌طور میانگین یک مسافر در هر دقیقه.
+        </p>
+      </div>
+
+
+      <div>
+        <label for="serviceTime"
+               class="block text-sm font-medium mb-2">
+          زمان سرویس هر مسافر
+          <span class="text-slate-500">(ثانیه)</span>
+        </label>
+
+        <input id="serviceTime"
+               class="input"
+               type="number"
+               min="0.1"
+               step="0.1"
+               value="3">
+
+      </div>
+
+    </div>
+
+
+    <!-- Seed -->
+
+    <div class="mt-4">
+
+      <label for="seed"
+             class="block text-sm font-medium mb-2">
+        بذر تصادفی
+        <span class="text-slate-500">(اختیاری)</span>
+      </label>
+
+      <input id="seed"
+             class="input"
+             type="number"
+             placeholder="مثلاً 42">
+
+      <p class="text-xs text-slate-500 mt-1">
+        اگر یک عدد مشخص وارد کنید، اجرای بعدی با همان عدد
+        نتایج قابل تکرارتری ایجاد می‌کند.
+      </p>
+
+    </div>
+
+
+    <button onclick="simulate()"
+            class="mt-5 bg-cyan-600 hover:bg-cyan-500 rounded-xl px-6 py-3 transition">
+      ▶ اجرای شبیه‌سازی
+    </button>
+
+
+    <div id="simulation-result"
+         class="result mt-4"></div>
+
+  </div>
+
+</section>
+    <!-- FLOYD -->
+      <section id="section-allpairs"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.1 — Floyd-Warshall</h2>
+
+        <select id="floydCriterion" class="input mt-5">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="floyd()"
+                class="mt-4 bg-purple-600 rounded-xl px-6 py-3">
+          محاسبه ماتریس
+        </button>
+
+        <div id="floyd-result"
+             class="result mt-5 overflow-auto"></div>
+      </section>
+      <!-- MAX FLOW -->
+      <section id="section-flow"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.2 — Maximum Flow</h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="flowStart" class="input"></select>
+          <select id="flowGoal" class="input"></select>
+        </div>
+
+        <button onclick="maxFlow()"
+                class="mt-4 bg-blue-600 rounded-xl px-6 py-3">
+          محاسبه Max Flow
+        </button>
+
+        <div id="flow-result" class="result mt-5"></div>
+      </section>
+
+  
+
+      <!-- CRITICAL -->
+      <section id="section-critical"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.3 — نقاط بحرانی و پل‌ها</h2>
+
+        <button onclick="critical()"
+                class="mt-4 bg-red-600 rounded-xl px-6 py-3">
+          تحلیل شبکه
+        </button>
+
+        <div id="critical-result" class="result mt-5"></div>
+      </section>
+
+      <!-- DOMINATING -->
+      <section id="section-dominating"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">T4.4 — Dominating Set</h2>
+
+        <button onclick="dominating()"
+                class="mt-4 bg-cyan-600 rounded-xl px-6 py-3">
+          اجرای الگوریتم تقریبی
+        </button>
+
+        <div id="dominating-result" class="result mt-5"></div>
+      </section>
+
+      <!-- SEARCH -->
+      <section id="section-search"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T4.5 — جستجوی تحمل خطای تایپی
+        </h2>
+
+        <input id="searchInput"
+               class="input mt-5"
+               placeholder="نام ایستگاه">
+
+        <button onclick="searchStation()"
+                class="mt-4 bg-teal-600 rounded-xl px-6 py-3">
+          جستجو
+        </button>
+
+        <div id="search-result" class="result mt-5"></div>
+      </section>
+
+      <!-- T5 -->
+      <section id="section-innovation"
+               class="card rounded-2xl p-6 hidden-section">
+        <h2 class="text-2xl font-bold">
+          T5 — مقایسه Dijkstra و Bidirectional Dijkstra
+        </h2>
+
+        <div class="grid md:grid-cols-2 gap-4 mt-5">
+          <select id="compareStart" class="input"></select>
+          <select id="compareGoal" class="input"></select>
+        </div>
+
+        <select id="compareCriterion" class="input mt-4">
+          <option value="distance">فاصله</option>
+          <option value="time">زمان</option>
+        </select>
+
+        <button onclick="compareRouting()"
+                class="mt-4 bg-indigo-600 rounded-xl px-6 py-3">
+          مقایسه
+        </button>
+
+        <div id="compare-result" class="result mt-5"></div>
+      </section>
+
+    </section>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+
+async function api(url, options = {}) {
+  const response = await fetch(url, options);
+  const data = await response.json();
+
+  if (!response.ok) {
+    throw new Error(
+      data.detail || data.error || `HTTP ${response.status}`
+    );
+  }
+
+  return data;
+}
+
+function esc(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function show(name, button) {
+  document.querySelectorAll("[id^='section-']")
+    .forEach(x => x.classList.add("hidden-section"));
+
+  $(`section-${name}`).classList.remove("hidden-section");
+
+  document.querySelectorAll(".sidebar-button")
+    .forEach(x => x.classList.remove("active"));
+
+  button.classList.add("active");
+}
+
+function fillSelect(id, stations) {
+  const select = $(id);
+
+  if (!select) return;
+
+  select.innerHTML = stations
+    .map(x => `<option value="${esc(x)}">${esc(x)}</option>`)
+    .join("");
+}
+
+async function loadStations() {
+  const data = await api("/api/stations");
+
+  const stations = data.stations;
+
+  [
+    "start",
+    "goal",
+    "bellmanStart",
+    "flowStart",
+    "flowGoal",
+    "tripStation",
+    "compareStart",
+    "compareGoal"
+  ].forEach(id => fillSelect(id, stations));
+
+  const dag = await api("/api/dag");
+
+  fillSelect("dagStart", dag.express_line);
+  fillSelect("dagGoal", dag.express_line);
+
+  $("status").innerHTML =
+    `متصل — ${stations.length} ایستگاه`;
+}
+
+async function shortestPath() {
+  try {
+    const data = await api("/api/shortest-path", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("start").value,
+        goal: $("goal").value,
+        criterion: $("criterion").value
+      })
+    });
+
+    $("routing-result").innerHTML = `
+      <b>مسیر:</b>
+      ${data.path ? data.path.map(esc).join(" ← ") : "یافت نشد"}
+      <br>
+      <b>هزینه:</b> ${data.cost ?? "∞"}
+    `;
+  } catch (e) {
+    $("routing-result").innerHTML = esc(e.message);
+  }
+}
+
+async function reachability() {
+  try {
+    const data = await api("/api/reachability", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("start").value,
+        goal: $("goal").value
+      })
+    });
+
+    $("routing-result").innerHTML = `
+      <b>قابل دسترسی:</b>
+      ${data.reachable ? "بله" : "خیر"}
+      <hr class="my-3">
+      <b>BFS:</b>
+      ${data.bfs_path?.map(esc).join(" ← ") ?? "یافت نشد"}
+      <hr class="my-3">
+      <b>DFS:</b>
+      ${data.dfs_path?.map(esc).join(" ← ") ?? "یافت نشد"}
+    `;
+  } catch (e) {
+    $("routing-result").innerHTML = esc(e.message);
+  }
+}
+
+async function mst() {
+  try {
+    const data = await api(
+      `/api/mst?criterion=${encodeURIComponent($("mstCriterion").value)}`
+    );
+
+    $("mst-result").innerHTML = `
+      <b>Kruskal:</b> ${data.kruskal_cost}
+      <br>
+      <b>Prim:</b> ${data.prim_cost}
+      <br>
+      <b>برابر:</b> ${data.same_cost ? "بله" : "خیر"}
+      <hr class="my-3">
+      ${data.kruskal_edges.map(
+        e => `${esc(e.source)} ↔ ${esc(e.destination)} = ${e.weight}`
+      ).join("<br>")}
+    `;
+  } catch (e) {
+    $("mst-result").innerHTML = esc(e.message);
+  }
+}
+
+async function loadDAG() {
+  try {
+    const data = await api("/api/dag");
+
+    $("dag-result").innerHTML = `
+      <b>DAG:</b> ${data.is_dag ? "بله" : "خیر"}
+      <br><br>
+      <b>خط Express:</b><br>
+      ${data.express_line.map(esc).join(" → ")}
+      <hr class="my-3">
+      <b>Topological Order:</b><br>
+      ${data.topological_order.map(esc).join(" → ")}
+    `;
+  } catch (e) {
+    $("dag-result").innerHTML = esc(e.message);
+  }
+}
+
+async function dagPath() {
+  try {
+    const data = await api("/api/dag-shortest-path", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("dagStart").value,
+        goal: $("dagGoal").value,
+        criterion: $("dagCriterion").value
+      })
+    });
+
+    $("dag-path-result").innerHTML = `
+      <b>مسیر:</b>
+      ${data.path ? data.path.map(esc).join(" → ") : "یافت نشد"}
+      <br>
+      <b>هزینه:</b> ${data.cost ?? "∞"}
+    `;
+  } catch (e) {
+    $("dag-path-result").innerHTML = esc(e.message);
+  }
+}
+
+async function bellman() {
+  try {
+    const data = await api("/api/bellman-ford", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        station: $("bellmanStart").value,
+        criterion: $("bellmanCriterion").value
+      })
+    });
+
+    $("bellman-result").innerHTML = `
+      <b>
+        ${data.has_negative_cycle
+          ? "چرخه منفی شناسایی شد"
+          : "چرخه منفی وجود ندارد"}
+      </b>
+
+      ${
+        data.negative_cycle?.length
+          ? `<br>چرخه:
+             ${data.negative_cycle.map(esc).join(" → ")}`
+          : ""
+      }
+
+      <hr class="my-3">
+
+      ${Object.entries(data.distances)
+        .map(
+          ([station, value]) =>
+            `${esc(station)} : ${value ?? "∞"}`
+        )
+        .join("<br>")}
+    `;
+  } catch (e) {
+    $("bellman-result").innerHTML = esc(e.message);
+  }
+}
+
+async function scheduleTrains() {
+  try {
+    const trains = JSON.parse(
+      $("scheduleInput").value
+    );
+
+    const data = await api(
+      "/api/t3/trains/schedule",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({trains})
+      }
+    );
+
+    $("schedule-result").innerHTML = `
+      <b>تعداد قطار انتخاب‌شده:</b>
+      ${data.selected_count}
+      <hr class="my-3">
+      ${data.selected_trains.map(
+        t =>
+          `${esc(t.train_id)}:
+           ${t.arrival_time} → ${t.departure_time}`
+      ).join("<br>")}
+    `;
+  } catch (e) {
+    $("schedule-result").innerHTML = esc(e.message);
+  }
+}
+
+function trainPayload() {
+  return {
+    train_id: $("trainId").value,
+    arrival_time: Number($("arrivalTime").value),
+    departure_time: Number($("departureTime").value),
+    delay_minutes: Number($("delay").value),
+    is_emergency: $("emergency").checked
+  };
+}
+
+async function addTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/add",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          train: trainPayload()
+        })
+      }
+    );
+
+    $("queue-result").innerHTML =
+      `قطار اضافه شد: ${esc(data.added)}
+       <br>اندازه صف: ${data.queue_size}
+       <br>قطار بعدی: ${esc(data.next_train)}`;
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
+
+async function peekTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/next"
+    );
+
+    $("queue-result").innerHTML =
+      data.train
+        ? `قطار بعدی:
+           <b>${esc(data.train.train_id)}</b>
+           <br>Priority: ${data.train.priority}
+           <br>صف: ${data.queue_size}`
+        : "صف خالی است.";
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
+
+async function dispatchTrain() {
+  try {
+    const data = await api(
+      "/api/t3/dispatch/dispatch",
+      {method: "POST"}
+    );
+
+    $("queue-result").innerHTML =
+      data.train
+        ? `قطار اعزام شد:
+           <b>${esc(data.train.train_id)}</b>
+           <br>Priority: ${data.train.priority}
+           <br>صف باقی‌مانده: ${data.queue_size}`
+        : "صف خالی است.";
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
+
+async function removeTrain() {
+  try {
+    const id = encodeURIComponent(
+      $("trainId").value
+    );
+
+    const data = await api(
+      `/api/t3/dispatch/${id}`,
+      {method: "DELETE"}
+    );
+
+    $("queue-result").innerHTML =
+      `حذف:
+       ${data.removed ? "موفق" : "قطار یافت نشد"}
+       <br>صف: ${data.queue_size}`;
+  } catch (e) {
+    $("queue-result").innerHTML = esc(e.message);
+  }
+}
+
+async function recordTrip() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/trips",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          date: $("tripDate").value,
+          station_id: $("tripStation").value,
+          count: Number($("tripCount").value)
+        })
+      }
+    );
+
+    $("analytics-result").innerHTML =
+      `ثبت شد. تعداد رکوردها: ${data.total_records}`;
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
+
+async function averageTrips() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/average-daily"
+    );
+
+    $("analytics-result").innerHTML =
+      `میانگین سفر روزانه:
+       <b>${data.average_daily_trips.toFixed(2)}</b>`;
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
+
+async function kthStation() {
+  try {
+    const data = await api(
+      "/api/t3/analytics/kth-busiest",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          k: Number($("kValue").value)
+        })
+      }
+    );
+
+    $("analytics-result").innerHTML =
+      data.found
+        ? `${data.k}امین ایستگاه پرتردد:
+           <b>${esc(data.station)}</b>
+           <br>تعداد سفر: ${data.trip_count}`
+        : "برای این K ایستگاهی وجود ندارد.";
+  } catch (e) {
+    $("analytics-result").innerHTML = esc(e.message);
+  }
+}
+
+async function simulate() {
+  try {
+    const seed =
+      $("seed").value === ""
+        ? null
+        : Number($("seed").value);
+
+    const data = await api(
+      "/api/t3/simulation",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          num_gates: Number($("numGates").value),
+          duration_minutes: Number($("duration").value),
+          avg_arrivals_per_minute:
+            Number($("arrivalRate").value),
+          service_time_seconds:
+            Number($("serviceTime").value),
+          seed
+        })
+      }
+    );
+
+    $("simulation-result").innerHTML = `
+      <b>تعداد مسافران:</b>
+      ${data.passenger_count}
+      <br>
+      <b>میانگین انتظار:</b>
+      ${data.average_waiting_time_minutes.toFixed(3)}
+      دقیقه
+      <br>
+      <b>بیشترین انتظار:</b>
+      ${data.max_waiting_time_minutes.toFixed(3)}
+      دقیقه
+    `;
+  } catch (e) {
+    $("simulation-result").innerHTML = esc(e.message);
+  }
+}
+
+async function maxFlow() {
+  try {
+    const data = await api("/api/max-flow", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        start: $("flowStart").value,
+        goal: $("flowGoal").value
+      })
+    });
+
+    $("flow-result").innerHTML =
+      `Maximum Flow:
+       <b>${data.max_flow}</b>`;
+  } catch (e) {
+    $("flow-result").innerHTML = esc(e.message);
+  }
+}
+
+async function floyd() {
+  try {
+    const data = await api(
+      `/api/floyd-warshall?criterion=${
+        encodeURIComponent($("floydCriterion").value)
+      }`
+    );
+
+    let html = `
+      <b>
+        ${data.has_negative_cycle
+          ? "چرخه منفی وجود دارد"
+          : "چرخه منفی وجود ندارد"}
+      </b>
+
+      <table class="w-full text-xs mt-4">
+        <tr>
+          <th class="p-2">ایستگاه</th>
+          ${data.stations.map(
+            x => `<th class="p-2">${esc(x)}</th>`
+          ).join("")}
+        </tr>
+    `;
+
+    data.distances.forEach(
+      (row, i) => {
+        html += `
+          <tr class="border-t border-white/10">
+            <td class="p-2">
+              ${esc(data.stations[i])}
+            </td>
+            ${row.map(
+              x => `<td class="p-2 text-center">
+                ${x ?? "∞"}
+              </td>`
+            ).join("")}
+          </tr>
+        `;
+      }
+    );
+
+    html += "</table>";
+
+    $("floyd-result").innerHTML = html;
+  } catch (e) {
+    $("floyd-result").innerHTML = esc(e.message);
+  }
+}
+
+async function critical() {
+  try {
+    const data = await api(
+      "/api/critical-nodes"
+    );
+
+    $("critical-result").innerHTML = `
+      <b>Articulation Points</b>
+      <br>
+      ${(data.points || []).map(esc).join("<br>")}
+      <hr class="my-4">
+      <b>Bridges</b>
+      <br>
+      ${(data.bridges || [])
+        .map(
+          x => `${esc(x[0])} ↔ ${esc(x[1])}`
+        )
+        .join("<br>")}
+    `;
+  } catch (e) {
+    $("critical-result").innerHTML = esc(e.message);
+  }
+}
+
+async function dominating() {
+  try {
+    const data = await api(
+      "/api/dominating-set"
+    );
+
+    $("dominating-result").innerHTML = `
+      <b>تعداد:</b> ${data.count}
+      <hr class="my-3">
+      ${data.solution.map(esc).join("<br>")}
+    `;
+  } catch (e) {
+    $("dominating-result").innerHTML = esc(e.message);
+  }
+}
+
+async function searchStation() {
+  try {
+    const q = encodeURIComponent(
+      $("searchInput").value.trim()
+    );
+
+    const data = await api(
+      `/api/search?q=${q}`
+    );
+
+    $("search-result").innerHTML =
+      data.results.map(
+        x =>
+          `${esc(x.name)}
+           — فاصله ویرایشی: ${x.distance}`
+      ).join("<br>");
+  } catch (e) {
+    $("search-result").innerHTML = esc(e.message);
+  }
+}
+
+async function compareRouting() {
+  try {
+    const data = await api(
+      "/api/compare-routing",
+      {
+        method: "POST",
+        headers: {"Content-Type": "application/json"},
+        body: JSON.stringify({
+          start: $("compareStart").value,
+          goal: $("compareGoal").value,
+          criterion: $("compareCriterion").value
+        })
+      }
+    );
+
+    $("compare-result").innerHTML = `
+      <b>Dijkstra:</b>
+      ${data.unidirectional.cost}
+      <br>
+      Nodes:
+      ${data.unidirectional.expanded_nodes}
+
+      <hr class="my-3">
+
+      <b>Bidirectional Dijkstra:</b>
+      ${data.bidirectional.cost}
+      <br>
+      Nodes:
+      ${data.bidirectional.expanded_nodes}
+
+      <hr class="my-3">
+
+      هزینه‌ها:
+      ${data.costs_match ? "برابر" : "متفاوت"}
+    `;
+  } catch (e) {
+    $("compare-result").innerHTML = esc(e.message);
+  }
+}
+
+window.addEventListener(
+  "DOMContentLoaded",
+  async () => {
+    try {
+      await loadStations();
+    } catch (e) {
+      $("status").innerHTML =
+        `خطا: ${esc(e.message)}`;
+    }
+  }
+);
+</script>
+
+</body>
+</html>

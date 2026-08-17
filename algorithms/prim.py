@@ -13,18 +13,28 @@ class MSTResult:
     total_cost: float
 
 
-def prim(graph: Graph, start=None, criterion="distance"):
+def prim(
+    graph: Graph,
+    start: str | None = None,
+    criterion: str = "distance",
+) -> MSTResult:
+    if graph.directed:
+        raise ValueError("Prim برای گراف بدون جهت استفاده می‌شود.")
 
-    if graph.num_stations() == 0:
-        return MSTResult([], 0)
+    station_ids = graph.station_ids()
+
+    if not station_ids:
+        return MSTResult([], 0.0)
 
     if start is None:
-        start = graph.station_ids()[0]
+        start = station_ids[0]
+
+    if not graph.has_station(start):
+        raise ValueError(f"ایستگاه شروع وجود ندارد: {start}")
 
     visited = {start}
-
     heap = []
-    counter = itertools.count()  
+    counter = itertools.count()
 
     for edge in graph.neighbors(start):
         heapq.heappush(
@@ -36,37 +46,34 @@ def prim(graph: Graph, start=None, criterion="distance"):
             ),
         )
 
-    mst = []
+    mst: List[Edge] = []
+    total = 0.0
 
-    total = 0
-
-    while heap and len(visited) < graph.num_stations():
-
+    while heap and len(visited) < len(station_ids):
         cost, _tie, edge = heapq.heappop(heap)
 
         if edge.destination in visited:
             continue
 
         visited.add(edge.destination)
-
         mst.append(edge)
-
         total += cost
 
-        for nxt in graph.neighbors(edge.destination):
-
-            if nxt.destination not in visited:
-
+        for next_edge in graph.neighbors(edge.destination):
+            if next_edge.destination not in visited:
                 heapq.heappush(
                     heap,
                     (
-                        nxt.get_weight(criterion),
+                        next_edge.get_weight(criterion),
                         next(counter),
-                        nxt,
+                        next_edge,
                     ),
                 )
 
+    if len(visited) != len(station_ids):
+        raise ValueError("گراف متصل نیست؛ بنابراین MST کامل وجود ندارد.")
+
     return MSTResult(
-        mst,
-        total,
+        edges=mst,
+        total_cost=total,
     )

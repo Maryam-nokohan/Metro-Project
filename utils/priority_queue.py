@@ -4,13 +4,13 @@ from typing import Any, Optional, Tuple
 
 
 class PriorityQueue:
-    _REMOVED = object()  
+    _REMOVED = object()
 
     def __init__(self) -> None:
         self._heap: list = []
 
         self._counter = itertools.count()
-        self._entry_finder: dict = {} 
+        self._entry_finder: dict = {}
 
     def push(self, item_id: Any, item: Any, priority: float) -> None:
 
@@ -22,7 +22,7 @@ class PriorityQueue:
         heapq.heappush(self._heap, entry)
 
     def remove(self, item_id: Any) -> bool:
-    
+
         entry = self._entry_finder.pop(item_id, None)
         if entry is None:
             return False
@@ -30,7 +30,7 @@ class PriorityQueue:
         return True
 
     def pop(self) -> Tuple[Any, Any, float]:
- 
+
         while self._heap:
             neg_priority, _count, item_id, item = heapq.heappop(self._heap)
             if item is not self._REMOVED and item_id in self._entry_finder:

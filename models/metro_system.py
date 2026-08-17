@@ -7,7 +7,6 @@ from models.graph import Graph
 
 
 class MetroSystem:
-
     def __init__(self, graph: Graph):
 
         self.graph = graph

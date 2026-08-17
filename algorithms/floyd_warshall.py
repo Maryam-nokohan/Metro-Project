@@ -11,8 +11,7 @@ def floyd_warshall(
     n = len(station_ids)
 
     next_hop: List[List[Optional[int]]] = [
-        [j if dist[i][j] != float("inf") else None for j in range(n)]
-        for i in range(n)
+        [j if dist[i][j] != float("inf") else None for j in range(n)] for i in range(n)
     ]
 
     for k in range(n):
@@ -35,7 +34,7 @@ def reconstruct_path(
     start_id: str,
     goal_id: str,
 ) -> Optional[List[str]]:
- 
+
     index_of = {sid: i for i, sid in enumerate(station_ids)}
     if start_id not in index_of or goal_id not in index_of:
         return None

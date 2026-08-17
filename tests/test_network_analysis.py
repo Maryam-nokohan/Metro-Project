@@ -1,19 +1,22 @@
 """
-    python3 -m unittest tests/test_network_analysis.py -v
+python3 -m unittest tests/test_network_analysis.py -v
 """
 
 import os
 import unittest
 
 from models import Graph, Station
-from algorithms.floyd_warshall import floyd_warshall, reconstruct_path, has_negative_cycle
+from algorithms.floyd_warshall import (
+    floyd_warshall,
+    reconstruct_path,
+    has_negative_cycle,
+)
 from algorithms.max_flow import max_flow
 from algorithms.articulation import find_articulation_points_and_bridges
 from algorithms.dominating_set import greedy_dominating_set, is_valid_dominating_set
 from algorithms.levenshtein import levenshtein_distance, find_closest_station
 from algorithms.dijkstra import dijkstra_shortest_path
 from utils.loader import build_graph_from_files, apply_capacities_from_file
-
 
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 STATIONS_PATH = os.path.join(DATA_DIR, "stations.txt")
@@ -41,7 +44,9 @@ class TestFloydWarshall(unittest.TestCase):
         start = "ایستگاه ترمینال مسافربری قم"
         goal = "ایستگاه بوستان جنگلی غدیر"
 
-        _dijkstra_path, dijkstra_cost = dijkstra_shortest_path(self.g, start, goal, "distance")
+        _dijkstra_path, dijkstra_cost = dijkstra_shortest_path(
+            self.g, start, goal, "distance"
+        )
         fw_cost = dist[index_of[start]][index_of[goal]]
 
         self.assertAlmostEqual(fw_cost, dijkstra_cost)
@@ -55,7 +60,7 @@ class TestFloydWarshall(unittest.TestCase):
         self.assertIsNotNone(path)
         self.assertEqual(path[0], start)
         self.assertEqual(path[-1], goal)
-    
+
         for a, b in zip(path, path[1:]):
             self.assertTrue(self.g.has_edge(a, b))
 
@@ -69,7 +74,7 @@ class TestFloydWarshall(unittest.TestCase):
 
 class TestMaxFlow(unittest.TestCase):
     def test_simple_diamond_network(self):
-  
+
         g = Graph(directed=True)
         g.add_edge("S", "A", capacity=5)
         g.add_edge("A", "T", capacity=5)
@@ -80,7 +85,7 @@ class TestMaxFlow(unittest.TestCase):
         self.assertEqual(result, 10)
 
     def test_bottleneck_limits_flow(self):
-        
+
         g = Graph(directed=True)
         g.add_edge("S", "A", capacity=10)
         g.add_edge("A", "T", capacity=2)
@@ -90,7 +95,7 @@ class TestMaxFlow(unittest.TestCase):
     def test_no_path_gives_zero_flow(self):
         g = Graph(directed=True)
         g.add_edge("S", "A", capacity=10)
-        g.add_station(Station("T")) 
+        g.add_station(Station("T"))
 
         self.assertEqual(max_flow(g, "S", "T"), 0)
 
@@ -124,7 +129,7 @@ class TestArticulation(unittest.TestCase):
         self.assertEqual(len(bridges), 3)
 
     def test_cycle_graph_has_no_articulation_points(self):
-  
+
         g = Graph(directed=False)
         g.add_edge("A", "B", distance=1, time=1)
         g.add_edge("B", "C", distance=1, time=1)
@@ -149,10 +154,9 @@ class TestArticulation(unittest.TestCase):
     def test_on_real_qom_graph(self):
         g = build_qom_graph()
         points, bridges = find_articulation_points_and_bridges(g)
-  
+
         self.assertGreater(len(points), 0)
         self.assertGreater(len(bridges), 0)
-
 
 
 class TestDominatingSet(unittest.TestCase):
@@ -165,7 +169,7 @@ class TestDominatingSet(unittest.TestCase):
 
         solution = greedy_dominating_set(g)
         self.assertTrue(is_valid_dominating_set(g, solution))
-        
+
         self.assertLessEqual(len(solution), 3)
 
     def test_result_is_valid_on_real_qom_graph(self):
@@ -180,7 +184,6 @@ class TestDominatingSet(unittest.TestCase):
         g.add_station(Station("Only"))
         solution = greedy_dominating_set(g)
         self.assertEqual(solution, ["Only"])
-
 
 
 class TestLevenshtein(unittest.TestCase):
@@ -203,7 +206,7 @@ class TestLevenshtein(unittest.TestCase):
             "ایستگاه میدان کشاورز",
             "ایستگاه بیمارستان نکویی",
         ]
-        
+
         query = "ایستگاه میدان متهری"
         results = find_closest_station(query, names, max_results=1)
 

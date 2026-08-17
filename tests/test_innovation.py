@@ -9,7 +9,6 @@ from algorithms.bidirectional_dijkstra import (
 from algorithms.dijkstra import dijkstra_shortest_path
 from utils.loader import build_graph_from_files
 
-
 DATA_DIR = os.path.join(os.path.dirname(__file__), "..", "data")
 STATIONS_PATH = os.path.join(DATA_DIR, "stations.txt")
 EDGES_PATH = os.path.join(DATA_DIR, "edges.txt")
@@ -21,7 +20,7 @@ def build_qom_graph() -> Graph:
 
 class TestBidirectionalDijkstraSmallGraph(unittest.TestCase):
     def setUp(self):
-        
+
         self.g = Graph(directed=False)
         self.g.add_edge("A", "B", distance=1, time=1)
         self.g.add_edge("B", "C", distance=1, time=1)
@@ -61,11 +60,9 @@ class TestBidirectionalDijkstraSmallGraph(unittest.TestCase):
 
 
 class TestBidirectionalDijkstraDirectedGraph(unittest.TestCase):
-
-
     def setUp(self):
         self.g = Graph(directed=False)
-        
+
         self.g.add_edge("X", "Y", distance=1, time=1, directed=True)
         self.g.add_edge("Y", "Z", distance=1, time=1, directed=True)
 
@@ -75,7 +72,7 @@ class TestBidirectionalDijkstraDirectedGraph(unittest.TestCase):
         self.assertEqual(cost, 2)
 
     def test_backward_direction_is_blocked(self):
-        
+
         path, cost, _expanded = bidirectional_dijkstra(self.g, "Z", "X")
         self.assertIsNone(path)
         self.assertEqual(cost, float("inf"))

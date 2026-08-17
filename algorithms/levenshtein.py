@@ -21,9 +21,9 @@ def levenshtein_distance(a: str, b: str) -> int:
         for j in range(1, len_b + 1):
             cost = 0 if a[i - 1] == b[j - 1] else 1
             dp[i][j] = min(
-                dp[i - 1][j] + 1,        
-                dp[i][j - 1] + 1,       
-                dp[i - 1][j - 1] + cost, 
+                dp[i - 1][j] + 1,
+                dp[i][j - 1] + 1,
+                dp[i - 1][j - 1] + cost,
             )
 
     return dp[len_a][len_b]
@@ -32,7 +32,7 @@ def levenshtein_distance(a: str, b: str) -> int:
 def find_closest_station(
     query: str, station_names: List[str], max_results: int = 3
 ) -> List[Tuple[str, int]]:
- 
+
     scored = [(name, levenshtein_distance(query, name)) for name in station_names]
     scored.sort(key=lambda pair: pair[1])
     return scored[:max_results]

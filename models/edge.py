@@ -3,7 +3,6 @@ from typing import Optional
 
 
 class Edge:
- 
     __slots__ = (
         "source",
         "destination",
@@ -59,7 +58,6 @@ class Edge:
             weight=self.weight,
             capacity=self.capacity,
         )
-
 
     def __repr__(self) -> str:
         arrow = "->" if self.directed else "<->"

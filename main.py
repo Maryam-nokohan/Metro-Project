@@ -1,525 +1,757 @@
-"""
-    python3 main.py
-"""
+from __future__ import annotations
 
-from models.graph import Graph
-from models.train import Train, TrainDispatchQueue
+import os
+from typing import List, Optional
 
-from utils.loader import build_graph_from_files, apply_capacities_from_file
-from utils.analytics import OperationsLog
-from utils.menu import (
-    print_header,
-    print_menu,
-    prompt_choice,
-    choose_station,
-    prompt_criterion,
-    prompt_float,
-    prompt_int,
-    prompt_text,
-    pause,
-)
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import HTMLResponse
+from fastapi.templating import Jinja2Templates
+from pydantic import BaseModel, Field
 
-from simulation.passenger_simulator import GateSimulator
-
+from algorithms.articulation import find_articulation_points_and_bridges
+from algorithms.bellman_ford import bellman_ford
+from algorithms.bidirectional_dijkstra import compare_expanded_nodes
 from algorithms.bfs import bfs_shortest_path
+from algorithms.dag_shortest_path import (
+    dag_shortest_path_to_target,
+    topological_sort,
+)
 from algorithms.dfs import dfs_path
 from algorithms.dijkstra import dijkstra_shortest_path
-from algorithms.kruskal import kruskal
-from algorithms.prim import prim
-from algorithms.dag_shortest_path import topological_sort, dag_shortest_path_to_target
-from algorithms.bellman_ford import bellman_ford
+from algorithms.dominating_set import greedy_dominating_set
+from algorithms.floyd_warshall import (
+    floyd_warshall,
+    has_negative_cycle,
+    reconstruct_path as fw_reconstruct_path,
+)
 from algorithms.interval_scheduling import select_max_trains
-from algorithms.floyd_warshall import floyd_warshall, reconstruct_path as fw_reconstruct_path
-from algorithms.max_flow import max_flow
-from algorithms.articulation import find_articulation_points_and_bridges
-from algorithms.dominating_set import greedy_dominating_set, is_valid_dominating_set
+from algorithms.kruskal import kruskal
 from algorithms.levenshtein import find_closest_station
-from algorithms.bidirectional_dijkstra import compare_expanded_nodes
+from algorithms.max_flow import max_flow
+from algorithms.prim import prim
+from models.graph import Graph
+from models.train import Train, TrainDispatchQueue
+from simulation.passenger_simulator import GateSimulator
+from utils.analytics import OperationsLog
+from utils.loader import apply_capacities_from_file, build_graph_from_files
+
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+DATA_DIR = os.path.join(BASE_DIR, "data")
+TEMPLATES_DIR = os.path.join(BASE_DIR, "templates")
+
+STATIONS_PATH = os.path.join(DATA_DIR, "stations.txt")
+EDGES_PATH = os.path.join(DATA_DIR, "edges.txt")
+CAPACITY_PATH = os.path.join(DATA_DIR, "capacity.txt")
 
 
-STATIONS_PATH = "data/stations.txt"
-EDGES_PATH = "data/edges.txt"
-CAPACITY_PATH = "data/capacity.txt"
+app = FastAPI(
+    title="Qom Metro Management System",
+    version="2.0.0",
+)
+
+templates = Jinja2Templates(directory=TEMPLATES_DIR)
+
+graph = build_graph_from_files(
+    STATIONS_PATH,
+    EDGES_PATH,
+)
+
+if os.path.exists(CAPACITY_PATH):
+    apply_capacities_from_file(graph, CAPACITY_PATH)
 
 
-# ======================================================================
-# دور اول: پذیرش اولیه (T1.1 - T1.4)
-# ======================================================================
-def round1_reachability(graph: Graph) -> None:
-    start = choose_station(graph, "ایستگاه مبدأ را انتخاب کنید")
-    if start is None:
-        return
-    goal = choose_station(graph, "ایستگاه مقصد را انتخاب کنید")
-    if goal is None:
-        return
-
-    path_bfs = bfs_shortest_path(graph, start, goal)
-    path_dfs = dfs_path(graph, start, goal)
-
-    print_header("نتیجه‌ی بررسی دسترسی‌پذیری")
-    if path_bfs is None:
-        print(f"\n❌ هیچ مسیری بین «{start}» و «{goal}» وجود ندارد.")
-    else:
-        print(f"\n✅ مسیر وجود دارد.")
-        print(f"مسیر با BFS (کمترین تعداد ایستگاه): {' -> '.join(path_bfs)}")
-        print(f"مسیر با DFS (یک مسیر معتبر، نه لزوماً کوتاه‌ترین): {' -> '.join(path_dfs)}")
-    pause()
+DEFAULT_EXPRESS_LINE = [
+    "ایستگاه ترمینال مسافربری قم",
+    "ایستگاه قلعه کامکار",
+    "ایستگاه میدان کشاورز",
+    "ایستگاه میدان مطهری",
+    "ایستگاه بیمارستان نکویی",
+    "ایستگاه میدان بقیه الله",
+    "ایستگاه مسجد مقدس جمکران",
+]
 
 
-def round1_shortest_path(graph: Graph) -> None:
-    start = choose_station(graph, "ایستگاه مبدأ را انتخاب کنید")
-    if start is None:
-        return
-    goal = choose_station(graph, "ایستگاه مقصد را انتخاب کنید")
-    if goal is None:
-        return
-    criterion = prompt_criterion()
+def build_express_graph(
+    base_graph: Graph,
+    stations: List[str],
+) -> Graph:
+    if len(stations) < 2:
+        raise ValueError("خط Express باید حداقل دو ایستگاه داشته باشد.")
 
-    path, cost = dijkstra_shortest_path(graph, start, goal, criterion)
+    if len(set(stations)) != len(stations):
+        raise ValueError("یک ایستگاه نمی‌تواند بیش از یک بار در خط Express باشد.")
 
-    print_header("نتیجه‌ی موتور مسیریابی (Dijkstra)")
+    express = Graph(directed=True)
+
+    for station_id in stations:
+        if not base_graph.has_station(station_id):
+            raise ValueError(f"ایستگاه وجود ندارد: {station_id}")
+        express.add_station(base_graph.get_station(station_id))
+
+    for source, destination in zip(stations, stations[1:]):
+        edge = base_graph.get_edge(source, destination)
+
+        if edge is None:
+            raise ValueError(
+                f"مسیر مستقیم بین «{source}» و «{destination}» در شبکه اصلی وجود ندارد."
+            )
+
+        express.add_edge(
+            source_id=source,
+            destination_id=destination,
+            distance=edge.distance,
+            time=edge.time,
+            weight=edge.weight,
+            capacity=edge.capacity,
+            directed=True,
+        )
+
+    return express
+
+
+express_graph = build_express_graph(
+    graph,
+    DEFAULT_EXPRESS_LINE,
+)
+
+
+dispatch_queue = TrainDispatchQueue()
+operations_log = OperationsLog()
+
+
+class PathRequest(BaseModel):
+    start: str
+    goal: str
+    criterion: str = "distance"
+
+
+class StationRequest(BaseModel):
+    station: str
+    criterion: str = "weight"
+
+
+class ExpressPathRequest(BaseModel):
+    start: str
+    goal: str
+    criterion: str = "distance"
+
+
+class ExpressLineRequest(BaseModel):
+    stations: List[str] = Field(min_length=2)
+
+
+class TrainInput(BaseModel):
+    train_id: str
+    arrival_time: float
+    departure_time: float
+    delay_minutes: float = 0.0
+    is_emergency: bool = False
+
+
+class TrainScheduleRequest(BaseModel):
+    trains: List[TrainInput]
+
+
+class DispatchTrainRequest(BaseModel):
+    train: TrainInput
+
+
+class RemoveTrainRequest(BaseModel):
+    train_id: str
+
+
+class TripRecordRequest(BaseModel):
+    date: str
+    station_id: str
+    count: int = Field(default=1, ge=1)
+
+
+class BusiestStationRequest(BaseModel):
+    k: int = Field(ge=1)
+
+
+class PassengerSimulationRequest(BaseModel):
+    num_gates: int = Field(default=2, ge=1)
+    duration_minutes: float = Field(default=60.0, gt=0)
+    avg_arrivals_per_minute: float = Field(default=1.0, gt=0)
+    service_time_seconds: float = Field(default=3.0, gt=0)
+    seed: Optional[int] = None
+
+
+def validate_criterion(criterion: str, allow_weight: bool = False) -> None:
+    allowed = {"distance", "time"}
+
+    if allow_weight:
+        allowed.add("weight")
+
+    if criterion not in allowed:
+        raise HTTPException(
+            status_code=400,
+            detail=f"criterion باید یکی از {sorted(allowed)} باشد.",
+        )
+
+
+def train_from_input(data: TrainInput) -> Train:
+    if data.arrival_time < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="زمان ورود نمی‌تواند منفی باشد.",
+        )
+
+    if data.departure_time < data.arrival_time:
+        raise HTTPException(
+            status_code=400,
+            detail="زمان خروج باید بزرگ‌تر یا مساوی زمان ورود باشد.",
+        )
+
+    if data.delay_minutes < 0:
+        raise HTTPException(
+            status_code=400,
+            detail="میزان تأخیر نمی‌تواند منفی باشد.",
+        )
+
+    return Train(
+        train_id=data.train_id,
+        arrival_time=data.arrival_time,
+        departure_time=data.departure_time,
+        delay_minutes=data.delay_minutes,
+        is_emergency=data.is_emergency,
+    )
+
+
+@app.get("/", response_class=HTMLResponse)
+async def read_root(request: Request):
+    return templates.TemplateResponse(
+        request=request,
+        name="index.html",
+    )
+
+
+@app.get("/api/stations")
+def get_stations():
+    return {
+        "stations": graph.station_ids(),
+        "count": graph.num_stations(),
+        "edges": graph.num_edges(),
+    }
+
+
+@app.post("/api/reachability")
+def check_reachability(req: PathRequest):
+    if not graph.has_station(req.start):
+        raise HTTPException(404, f"ایستگاه مبدأ وجود ندارد: {req.start}")
+
+    if not graph.has_station(req.goal):
+        raise HTTPException(404, f"ایستگاه مقصد وجود ندارد: {req.goal}")
+
+    return {
+        "reachable": bfs_shortest_path(
+            graph,
+            req.start,
+            req.goal,
+        )
+        is not None,
+        "bfs_path": bfs_shortest_path(
+            graph,
+            req.start,
+            req.goal,
+        ),
+        "dfs_path": dfs_path(
+            graph,
+            req.start,
+            req.goal,
+        ),
+    }
+
+
+@app.post("/api/shortest-path")
+def shortest_path(req: PathRequest):
+    validate_criterion(req.criterion)
+
+    path, cost = dijkstra_shortest_path(
+        graph,
+        req.start,
+        req.goal,
+        req.criterion,
+    )
+
+    return {
+        "path": path,
+        "cost": None if cost == float("inf") else cost,
+        "criterion": req.criterion,
+    }
+
+
+@app.get("/api/mst")
+def get_mst(criterion: str = "distance"):
+    validate_criterion(criterion)
+
+    kruskal_result = kruskal(
+        graph,
+        criterion=criterion,
+    )
+
+    prim_result = prim(
+        graph,
+        criterion=criterion,
+    )
+
+    return {
+        "criterion": criterion,
+        "kruskal_cost": kruskal_result.total_cost,
+        "prim_cost": prim_result.total_cost,
+        "same_cost": (abs(kruskal_result.total_cost - prim_result.total_cost) < 1e-9),
+        "kruskal_edges": [
+            {
+                "source": edge.source,
+                "destination": edge.destination,
+                "weight": edge.get_weight(criterion),
+            }
+            for edge in kruskal_result.edges
+        ],
+        "prim_edges": [
+            {
+                "source": edge.source,
+                "destination": edge.destination,
+                "weight": edge.get_weight(criterion),
+            }
+            for edge in prim_result.edges
+        ],
+    }
+
+
+@app.get("/api/dag")
+def get_dag():
+    order = topological_sort(express_graph)
+
+    return {
+        "is_dag": order is not None,
+        "express_line": express_graph.station_ids(),
+        "edges": [
+            {
+                "source": edge.source,
+                "destination": edge.destination,
+                "distance": edge.distance,
+                "time": edge.time,
+                "weight": edge.weight,
+            }
+            for edge in express_graph.edges()
+        ],
+        "topological_order": order,
+    }
+
+
+@app.post("/api/express-line")
+def create_express_line(req: ExpressLineRequest):
+    global express_graph
+
+    try:
+        candidate = build_express_graph(
+            graph,
+            req.stations,
+        )
+
+        order = topological_sort(candidate)
+
+        if order is None:
+            raise ValueError("خط Express باید DAG باشد.")
+
+        express_graph = candidate
+
+        return {
+            "is_dag": True,
+            "express_line": express_graph.station_ids(),
+            "topological_order": order,
+            "edges": [
+                {
+                    "source": edge.source,
+                    "destination": edge.destination,
+                    "distance": edge.distance,
+                    "time": edge.time,
+                    "weight": edge.weight,
+                }
+                for edge in express_graph.edges()
+            ],
+        }
+
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc),
+        ) from exc
+
+
+@app.post("/api/dag-shortest-path")
+def dag_shortest_path(req: ExpressPathRequest):
+    validate_criterion(req.criterion)
+
+    if not express_graph.has_station(req.start):
+        raise HTTPException(
+            status_code=404,
+            detail="مبدأ در خط Express وجود ندارد.",
+        )
+
+    if not express_graph.has_station(req.goal):
+        raise HTTPException(
+            status_code=404,
+            detail="مقصد در خط Express وجود ندارد.",
+        )
+
+    path, cost = dag_shortest_path_to_target(
+        express_graph,
+        req.start,
+        req.goal,
+        req.criterion,
+    )
+
+    return {
+        "is_dag": True,
+        "path": path,
+        "cost": None if cost == float("inf") else cost,
+        "criterion": req.criterion,
+        "express_line": express_graph.station_ids(),
+    }
+
+
+@app.post("/api/bellman-ford")
+def bellman_ford_route(req: StationRequest):
+    validate_criterion(
+        req.criterion,
+        allow_weight=True,
+    )
+
+    if not graph.has_station(req.station):
+        raise HTTPException(
+            status_code=404,
+            detail=f"ایستگاه وجود ندارد: {req.station}",
+        )
+
+    dist, parent, negative_cycle = bellman_ford(
+        graph,
+        req.station,
+        req.criterion,
+    )
+
+    return {
+        "start": req.station,
+        "criterion": req.criterion,
+        "distances": {
+            station: (None if value == float("inf") else value)
+            for station, value in dist.items()
+        },
+        "negative_cycle": negative_cycle,
+        "has_negative_cycle": bool(negative_cycle),
+    }
+
+
+@app.post("/api/max-flow")
+def calculate_max_flow(req: PathRequest):
+    flow = max_flow(
+        graph,
+        req.start,
+        req.goal,
+    )
+
+    return {
+        "source": req.start,
+        "sink": req.goal,
+        "max_flow": flow,
+    }
+
+
+@app.get("/api/floyd-warshall")
+def get_floyd_warshall(criterion: str = "distance"):
+    validate_criterion(criterion)
+
+    station_ids, distances, _next_hop = floyd_warshall(
+        graph,
+        criterion,
+    )
+
+    return {
+        "criterion": criterion,
+        "stations": station_ids,
+        "distances": [
+            [None if value == float("inf") else value for value in row]
+            for row in distances
+        ],
+        "has_negative_cycle": has_negative_cycle(distances),
+    }
+
+
+@app.post("/api/floyd-warshall/path")
+def floyd_warshall_path(req: PathRequest):
+    validate_criterion(req.criterion)
+
+    station_ids, distances, next_hop = floyd_warshall(
+        graph,
+        req.criterion,
+    )
+
+    path = fw_reconstruct_path(
+        station_ids,
+        next_hop,
+        req.start,
+        req.goal,
+    )
+
     if path is None:
-        print("\n❌ مسیری بین این دو ایستگاه وجود ندارد.")
-    else:
-        unit = "کیلومتر" if criterion == "distance" else "دقیقه"
-        print(f"\n✅ کوتاه‌ترین مسیر:\n  {' -> '.join(path)}")
-        print(f"\nهزینه‌ی کل: {cost:.2f} {unit}")
-    pause()
+        return {
+            "path": None,
+            "cost": None,
+            "criterion": req.criterion,
+        }
+
+    index = {station: i for i, station in enumerate(station_ids)}
+
+    cost = distances[index[req.start]][index[req.goal]]
+
+    return {
+        "path": path,
+        "cost": (None if cost == float("inf") else cost),
+        "criterion": req.criterion,
+    }
 
 
-def round1_menu(graph: Graph) -> None:
-    options = [
-        "بررسی دسترسی‌پذیری بین دو ایستگاه (BFS/DFS) - T1.2",
-        "کوتاه‌ترین مسیر بین دو ایستگاه (Dijkstra) - T1.3",
-    ]
-    while True:
-        print_menu("دور اول: پذیرش اولیه", options)
-        choice = prompt_choice(len(options))
-        if choice == 0:
-            return
-        if choice == 1:
-            round1_reachability(graph)
-        elif choice == 2:
-            round1_shortest_path(graph)
-
-
-# ======================================================================
-# دور دوم: طراحی زیرساخت‌ها (T2.1 - T2.4)
-# ======================================================================
-def round2_mst(graph: Graph) -> None:
-    criterion = prompt_criterion()
-    kruskal_result = kruskal(graph, criterion)
-    prim_result = prim(graph, criterion=criterion)
-
-    print_header("کم‌هزینه‌ترین شبکه: مقایسه‌ی Kruskal و Prim")
-    print(f"\nKruskal : {len(kruskal_result.edges)} یال, هزینه‌ی کل = {kruskal_result.total_cost:.2f}")
-    print(f"Prim    : {len(prim_result.edges)} یال, هزینه‌ی کل = {prim_result.total_cost:.2f}")
-
-    print("\nیال‌های درخت پوشای کمینه (Kruskal):")
-    for edge in kruskal_result.edges:
-        print(f"  {edge.source}  <->  {edge.destination}   ({edge.get_weight(criterion):.2f})")
-    pause()
-
-
-def _build_demo_express_line() -> Graph:
-    """
-    زیرشبکه‌ی نمونه‌ی خط اکسپرس یک‌طرفه (T2.3) - یک DAG کوچک، ساخته‌شده
-    از زیرمجموعه‌ای از ایستگاه‌های واقعی قم، فقط برای دمو. جدا از گراف
-    اصلی نگه داشته می‌شود تا ساختار دوطرفه‌ی گراف اصلی به‌هم نخورد.
-    """
-    g = Graph(directed=True)
-    g.add_edge("ایستگاه ترمینال مسافربری قم", "ایستگاه قلعه کامکار", distance=1.2, time=2, directed=True)
-    g.add_edge("ایستگاه قلعه کامکار", "ایستگاه میدان کشاورز", distance=2.5, time=3, directed=True)
-    g.add_edge("ایستگاه میدان کشاورز", "ایستگاه میدان مطهری", distance=6, time=5, directed=True)
-    g.add_edge("ایستگاه میدان مطهری", "ایستگاه حرم مطهر حضرت معصومه (س)", distance=4, time=1, directed=True)
-    return g
-
-
-def round2_dag(graph: Graph) -> None:
-    print_header("خط اکسپرس یک‌طرفه (T2.3)")
-    print("\nاین یک زیرشبکه‌ی نمونه از خط اکسپرس یک‌طرفه است (فقط برای دمو،")
-    print("جدا از گراف اصلی و روی زیرمجموعه‌ای از ایستگاه‌های واقعی قم):")
-    express = _build_demo_express_line()
-
-    order = topological_sort(express)
-    print(f"\nترتیب توپولوژیک ایستگاه‌ها:\n  {' -> '.join(order)}")
-
-    start = choose_station(express, "ایستگاه مبدأ روی خط اکسپرس")
-    if start is None:
-        return
-    goal = choose_station(express, "ایستگاه مقصد روی خط اکسپرس")
-    if goal is None:
-        return
-    criterion = prompt_criterion()
-
-    path, cost = dag_shortest_path_to_target(express, start, goal, criterion)
-    if path is None:
-        print("\n❌ چون خط اکسپرس یک‌طرفه است، مسیری از این مبدأ به این مقصد وجود ندارد.")
-        print("   (نکته: مسیر برعکس را هم امتحان کنید - جهت خط را عوض کنید.)")
-    else:
-        print(f"\n✅ مسیر: {' -> '.join(path)}")
-        print(f"هزینه‌ی کل: {cost:.2f}")
-    pause()
-
-
-def round2_bellman_ford(graph: Graph) -> None:
-    options = [
-        "اجرا روی شبکه‌ی اصلی قم (بررسی وجود چرخه‌ی منفی)",
-        "دمو با یک گراف کوچک حاوی چرخه‌ی منفی عمدی",
-    ]
-    print_menu("بررسی چرخه‌ی منفی و کوتاه‌ترین مسیر (T2.4)", options)
-    choice = prompt_choice(len(options))
-    if choice == 0:
-        return
-
-    if choice == 1:
-        start = choose_station(graph, "ایستگاه مبدأ را انتخاب کنید")
-        if start is None:
-            return
-        dist, _parent, negative_cycle = bellman_ford(graph, start, criterion="distance")
-
-        print_header("نتیجه‌ی Bellman-Ford روی شبکه‌ی اصلی")
-        if negative_cycle:
-            print(f"\n⚠️ چرخه‌ی منفی پیدا شد! یال‌های درگیر: {negative_cycle}")
-        else:
-            print("\n✅ هیچ چرخه‌ی منفی‌ای در شبکه وجود ندارد؛ فاصله‌ها معتبرند.")
-            print(f"\nنمونه‌ای از فاصله‌ی محاسبه‌شده از «{start}»:")
-            for station_id, distance in list(dist.items())[:5]:
-                print(f"  {station_id}: {distance:.2f}")
-    else:
-        demo = Graph(directed=True)
-        demo.add_edge("A", "B", distance=1, time=1, weight=1)
-        demo.add_edge("B", "C", distance=1, time=1, weight=-3)
-        demo.add_edge("C", "A", distance=1, time=1, weight=1)
-
-        print_header("دمو: گراف حاوی چرخه‌ی منفی عمدی")
-        print("\nA -> B (وزن=+1)   B -> C (وزن=-3)   C -> A (وزن=+1)")
-        print("مجموع وزن چرخه‌ی A->B->C->A برابر 1-3+1 = -1 است (منفی).")
-
-        _dist, _parent, negative_cycle = bellman_ford(demo, "A", criterion="weight")
-        if negative_cycle:
-            print(f"\n✅ الگوریتم به‌درستی چرخه‌ی منفی را تشخیص داد: {negative_cycle}")
-        else:
-            print("\n❌ چرخه‌ی منفی تشخیص داده نشد (نتیجه‌ی غیرمنتظره برای این دمو).")
-    pause()
-
-
-def round2_menu(graph: Graph) -> None:
-    options = [
-        "طراحی کم‌هزینه‌ترین شبکه - مقایسه‌ی Kruskal/Prim (T2.1, T2.2)",
-        "کوتاه‌ترین مسیر روی خط اکسپرس یک‌طرفه (T2.3)",
-        "بررسی چرخه‌ی منفی (T2.4)",
-    ]
-    while True:
-        print_menu("دور دوم: طراحی زیرساخت‌ها", options)
-        choice = prompt_choice(len(options))
-        if choice == 0:
-            return
-        if choice == 1:
-            round2_mst(graph)
-        elif choice == 2:
-            round2_dag(graph)
-        elif choice == 3:
-            round2_bellman_ford(graph)
-
-
-# ======================================================================
-# دور سوم: عملیات‌های روزانه‌ی مترو (T3.1 - T3.4)
-# ======================================================================
-def round3_interval_scheduling() -> None:
-    options = ["استفاده از داده‌ی نمونه", "وارد کردن دستی قطارها"]
-    print_menu("تخصیص بیشینه‌ی قطارها به یک سکوی مشترک (T3.1)", options)
-    choice = prompt_choice(len(options))
-    if choice == 0:
-        return
-
-    if choice == 1:
-        sample = [
-            ("A", 1, 4), ("B", 3, 5), ("C", 0, 6), ("D", 5, 7),
-            ("E", 3, 9), ("F", 5, 9), ("G", 6, 10), ("H", 8, 11),
-            ("I", 8, 12), ("J", 2, 14), ("K", 12, 16),
-        ]
-        trains = [Train(train_id, arrival, departure) for train_id, arrival, departure in sample]
-    else:
-        count = prompt_int("چند قطار می‌خواهید وارد کنید؟", default=3)
-        trains = []
-        for i in range(1, count + 1):
-            print(f"\nقطار شماره‌ی {i}:")
-            arrival = prompt_float("  زمان ورود به سکو")
-            departure = prompt_float("  زمان خروج از سکو")
-            trains.append(Train(f"T{i}", arrival, departure))
-
-    print("\nلیست قطارهای ورودی (بازه‌ی اشغال سکو):")
-    for train in trains:
-        print(f"  {train.train_id}: [{train.arrival_time}, {train.departure_time})")
-
-    selected = select_max_trains(trains)
-    print_header("نتیجه‌ی زمان‌بندی")
-    print(f"\n✅ بیشترین تعداد قطار قابل‌سرویس‌دهی بدون تداخل زمانی: {len(selected)}")
-    print("قطارهای انتخاب‌شده: " + ", ".join(t.train_id for t in selected))
-    pause()
-
-
-def round3_dispatch_queue() -> None:
-    print_header("مدیریت صف اعزام قطارها بر اساس اولویت (T3.2)")
-    sample = [
-        Train("Normal-1", 0, 10, delay_minutes=3),
-        Train("Delayed", 0, 10, delay_minutes=20),
-        Train("Emergency", 0, 10, delay_minutes=0, is_emergency=True),
-        Train("Normal-2", 0, 10, delay_minutes=1),
-    ]
-
-    queue = TrainDispatchQueue()
-    print("\nقطارهای اضافه‌شده به صف:")
-    for train in sample:
-        queue.add_train(train)
-        print(f"  + {train.train_id}  (تأخیر={train.delay_minutes} دقیقه, اضطراری={train.is_emergency})")
-
-    print("\nترتیب اعزام (بالاترین اولویت اول):")
-    order = 1
-    while not queue.is_empty():
-        train = queue.dispatch_next()
-        print(f"  {order}) {train.train_id}")
-        order += 1
-    pause()
-
-
-def round3_analytics_and_simulation(graph: Graph) -> None:
-    """
-    این بخش T3.3 (تحلیل داده‌های بهره‌برداری) و T3.4 (شبیه‌سازی ورود
-    مسافران) را با هم ترکیب می‌کند: برای چند «روز» فرضی، ورود مسافران
-    به تعدادی از ایستگاه‌ها شبیه‌سازی می‌شود و نتیجه در OperationsLog
-    ثبت می‌گردد؛ سپس پرس‌وجوهای تحلیلی روی همین داده‌ی تولیدشده اجرا
-    می‌شوند (دقیقاً همان معماری «سامانه‌ی یکپارچه» که سند پروژه خواسته).
-    """
-    print_header("شبیه‌سازی روزانه + تحلیل داده‌های بهره‌برداری (T3.3 + T3.4)")
-    num_days = prompt_int("تعداد روزهای شبیه‌سازی", default=3)
-    sample_stations = graph.station_ids()[:6]
-
-    log = OperationsLog()
-    print(f"\nدر حال شبیه‌سازی {num_days} روز برای {len(sample_stations)} ایستگاه...")
-
-    for day in range(1, num_days + 1):
-        date_label = f"روز {day}"
-        for station_id in sample_stations:
-            simulator = GateSimulator(num_gates=2, service_time_seconds=4)
-            passengers = simulator.generate_arrivals(duration_minutes=60, avg_arrivals_per_minute=1.5)
-            simulator.simulate(passengers)
-            log.record_trip(date_label, station_id, len(passengers))
-
-    print(f"✅ {log.total_records()} رکورد سفر ثبت شد.")
-    print(f"\nمیانگین سفر روزانه‌ی کل شبکه: {log.average_daily_trips():.1f} نفر")
-
-    k = prompt_int("برای دیدن k امین ایستگاه پرتردد، مقدار k را وارد کنید", default=1)
-    result = log.kth_busiest_station(k)
-    if result:
-        print(f"\n{k} امین ایستگاه پرتردد: «{result[0]}» با {result[1]} سفر")
-    else:
-        print("\n❌ مقدار k نامعتبر است (باید بین ۱ و تعداد ایستگاه‌های نمونه باشد).")
-    pause()
-
-
-def round3_menu(graph: Graph) -> None:
-    options = [
-        "تخصیص بیشینه‌ی قطارها به یک سکوی مشترک (T3.1)",
-        "مدیریت صف اعزام قطارها (T3.2)",
-        "شبیه‌سازی مسافران + تحلیل داده‌های بهره‌برداری (T3.3 + T3.4)",
-    ]
-    while True:
-        print_menu("دور سوم: عملیات‌های روزانه‌ی مترو", options)
-        choice = prompt_choice(len(options))
-        if choice == 0:
-            return
-        if choice == 1:
-            round3_interval_scheduling()
-        elif choice == 2:
-            round3_dispatch_queue()
-        elif choice == 3:
-            round3_analytics_and_simulation(graph)
-
-
-# ======================================================================
-# دور چهارم: تحلیل و ارزیابی عملکرد شبکه (T4.1 - T4.5)
-# ======================================================================
-def round4_floyd_warshall(graph: Graph) -> None:
-    criterion = prompt_criterion()
-    print("\nدر حال پیش‌محاسبه‌ی ماتریس کامل کوتاه‌ترین مسیرها...")
-    station_ids, dist_matrix, next_hop = floyd_warshall(graph, criterion)
-
-    start = choose_station(graph, "ایستگاه مبدأ را انتخاب کنید")
-    if start is None:
-        return
-    goal = choose_station(graph, "ایستگاه مقصد را انتخاب کنید")
-    if goal is None:
-        return
-
-    path = fw_reconstruct_path(station_ids, next_hop, start, goal)
-    index_of = {sid: i for i, sid in enumerate(station_ids)}
-    cost = dist_matrix[index_of[start]][index_of[goal]]
-
-    print_header("نتیجه‌ی Floyd-Warshall")
-    print(f"\n✅ کوتاه‌ترین مسیر (از ماتریس پیش‌محاسبه‌شده): {' -> '.join(path)}")
-    print(f"هزینه: {cost:.2f}")
-    pause()
-
-
-def round4_max_flow(graph: Graph) -> None:
-    source = choose_station(graph, "ایستگاه مبدأ (منبع جریان مسافر)")
-    if source is None:
-        return
-    sink = choose_station(graph, "ایستگاه مقصد (چاهک جریان مسافر)")
-    if sink is None:
-        return
-
-    flow_value = max_flow(graph, source, sink)
-    print_header("نتیجه‌ی ظرفیت‌سنجی شبکه (Max-Flow)")
-    print(f"\n✅ بیشینه‌ی جریان قابل‌انتقال: {flow_value:.0f} نفر بر ساعت")
-    pause()
-
-
-def round4_articulation(graph: Graph) -> None:
+@app.get("/api/critical-nodes")
+def critical_nodes():
     points, bridges = find_articulation_points_and_bridges(graph)
 
-    print_header("ایستگاه‌های بحرانی و مسیرهای بحرانی (T4.3)")
-    print(f"\nتعداد ایستگاه‌های بحرانی (نقاط برشی): {len(points)}")
-    for station_id in sorted(points):
-        print(f"  - {station_id}")
-
-    print(f"\nتعداد مسیرهای بحرانی (پل): {len(bridges)}")
-    for source, destination in bridges:
-        print(f"  - {source}  <->  {destination}")
-    pause()
+    return {
+        "points": sorted(points),
+        "bridges": [list(bridge) for bridge in bridges],
+    }
 
 
-def round4_dominating_set(graph: Graph) -> None:
+@app.get("/api/dominating-set")
+def dominating_set():
     solution = greedy_dominating_set(graph)
-    valid = is_valid_dominating_set(graph, solution)
 
-    print_header("استقرار تیم‌های امداد - تقریبی (T4.4، امتیازی)")
-    print(f"\n✅ تعداد ایستگاه‌های پیشنهادی برای استقرار: {len(solution)} از {graph.num_stations()}")
-    for station_id in solution:
-        print(f"  - {station_id}")
-    print(f"\nاعتبارسنجی: {'✅ همه‌ی ایستگاه‌ها پوشش داده شدند' if valid else '❌ خطا در الگوریتم'}")
-    pause()
+    return {
+        "solution": solution,
+        "count": len(solution),
+    }
 
 
-def round4_levenshtein(graph: Graph) -> None:
-    query = prompt_text("نام ایستگاه را وارد کنید (حتی اگر غلط تایپی داشته باشد)")
-    results = find_closest_station(query, graph.station_ids(), max_results=3)
+@app.get("/api/search")
+def search_station(q: str):
+    query = q.strip()
 
-    print_header("نتیجه‌ی جست‌وجوی تایپی‌تحمل‌پذیر")
-    print("\nنزدیک‌ترین نام‌های ایستگاه:")
-    for name, distance in results:
-        print(f"  {name}   (فاصله‌ی ویرایشی = {distance})")
-    pause()
+    if not query:
+        raise HTTPException(
+            status_code=400,
+            detail="عبارت جستجو نمی‌تواند خالی باشد.",
+        )
+
+    results = find_closest_station(
+        query,
+        graph.station_ids(),
+        max_results=5,
+    )
+
+    return {
+        "query": query,
+        "results": [
+            {
+                "name": name,
+                "distance": distance,
+            }
+            for name, distance in results
+        ],
+    }
 
 
-def round4_menu(graph: Graph) -> None:
-    options = [
-        "پیش‌محاسبه‌ی کوتاه‌ترین مسیر بین همه‌ی ایستگاه‌ها (Floyd-Warshall) - T4.1",
-        "ظرفیت‌سنجی شبکه در ساعات اوج (Max-Flow) - T4.2",
-        "شناسایی ایستگاه‌های بحرانی (نقاط برشی و پل‌ها) - T4.3",
-        "استقرار تیم‌های امداد - تقریبی (امتیازی) - T4.4",
-        "جست‌وجوی نام ایستگاه با تحمل خطای تایپی - T4.5",
+@app.post("/api/compare-routing")
+def compare_routing(req: PathRequest):
+    validate_criterion(req.criterion)
+
+    return compare_expanded_nodes(
+        graph,
+        req.start,
+        req.goal,
+        req.criterion,
+    )
+
+
+@app.post("/api/t3/trains/schedule")
+def schedule_trains(req: TrainScheduleRequest):
+    trains = [train_from_input(train) for train in req.trains]
+
+    selected = select_max_trains(trains)
+
+    return {
+        "selected_count": len(selected),
+        "selected_trains": [
+            {
+                "train_id": train.train_id,
+                "arrival_time": train.arrival_time,
+                "departure_time": train.departure_time,
+                "delay_minutes": train.delay_minutes,
+                "is_emergency": train.is_emergency,
+            }
+            for train in selected
+        ],
+    }
+
+
+@app.post("/api/t3/dispatch/add")
+def add_dispatch_train(req: DispatchTrainRequest):
+    train = train_from_input(req.train)
+
+    dispatch_queue.add_train(train)
+
+    next_train = dispatch_queue.peek_next()
+
+    return {
+        "added": train.train_id,
+        "queue_size": len(dispatch_queue),
+        "next_train": (None if next_train is None else next_train.train_id),
+    }
+
+
+@app.delete("/api/t3/dispatch/{train_id}")
+def remove_dispatch_train(train_id: str):
+    removed = dispatch_queue.remove_train(train_id)
+
+    return {
+        "removed": removed,
+        "train_id": train_id,
+        "queue_size": len(dispatch_queue),
+    }
+
+
+@app.get("/api/t3/dispatch/next")
+def peek_dispatch_train():
+    train = dispatch_queue.peek_next()
+
+    if train is None:
+        return {
+            "train": None,
+            "queue_size": 0,
+        }
+
+    return {
+        "train": {
+            "train_id": train.train_id,
+            "arrival_time": train.arrival_time,
+            "departure_time": train.departure_time,
+            "delay_minutes": train.delay_minutes,
+            "is_emergency": train.is_emergency,
+            "priority": train.priority_score(),
+        },
+        "queue_size": len(dispatch_queue),
+    }
+
+
+@app.post("/api/t3/dispatch/dispatch")
+def dispatch_next_train():
+    train = dispatch_queue.dispatch_next()
+
+    if train is None:
+        return {
+            "train": None,
+            "queue_size": 0,
+        }
+
+    return {
+        "train": {
+            "train_id": train.train_id,
+            "arrival_time": train.arrival_time,
+            "departure_time": train.departure_time,
+            "delay_minutes": train.delay_minutes,
+            "is_emergency": train.is_emergency,
+            "priority": train.priority_score(),
+        },
+        "queue_size": len(dispatch_queue),
+    }
+
+
+@app.post("/api/t3/analytics/trips")
+def record_trip(req: TripRecordRequest):
+    if not graph.has_station(req.station_id):
+        raise HTTPException(
+            status_code=404,
+            detail=f"ایستگاه وجود ندارد: {req.station_id}",
+        )
+
+    operations_log.record_trip(
+        date=req.date,
+        station_id=req.station_id,
+        count=req.count,
+    )
+
+    return {
+        "success": True,
+        "total_records": operations_log.total_records(),
+    }
+
+
+@app.get("/api/t3/analytics/average-daily")
+def average_daily_trips():
+    return {
+        "average_daily_trips": operations_log.average_daily_trips(),
+    }
+
+
+@app.post("/api/t3/analytics/kth-busiest")
+def kth_busiest_station(req: BusiestStationRequest):
+    result = operations_log.kth_busiest_station(req.k)
+
+    if result is None:
+        return {
+            "found": False,
+            "station": None,
+            "trip_count": None,
+        }
+
+    station, count = result
+
+    return {
+        "found": True,
+        "station": station,
+        "trip_count": count,
+        "k": req.k,
+    }
+
+
+@app.post("/api/t3/simulation")
+def simulate_passengers(
+    req: PassengerSimulationRequest,
+):
+    simulator = GateSimulator(
+        num_gates=req.num_gates,
+        service_time_seconds=req.service_time_seconds,
+        seed=req.seed,
+    )
+
+    passengers = simulator.generate_arrivals(
+        duration_minutes=req.duration_minutes,
+        avg_arrivals_per_minute=req.avg_arrivals_per_minute,
+    )
+
+    result = simulator.simulate(passengers)
+
+    waiting_times = [
+        passenger.waiting_time
+        for passenger in result
+        if passenger.waiting_time is not None
     ]
-    while True:
-        print_menu("دور چهارم: تحلیل و ارزیابی عملکرد شبکه", options)
-        choice = prompt_choice(len(options))
-        if choice == 0:
-            return
-        if choice == 1:
-            round4_floyd_warshall(graph)
-        elif choice == 2:
-            round4_max_flow(graph)
-        elif choice == 3:
-            round4_articulation(graph)
-        elif choice == 4:
-            round4_dominating_set(graph)
-        elif choice == 5:
-            round4_levenshtein(graph)
 
-
-# ======================================================================
-# دور پنجم: نوآوری - امتیازی (Bidirectional Dijkstra)
-# ======================================================================
-def round5_bidirectional(graph: Graph) -> None:
-    start = choose_station(graph, "ایستگاه مبدأ را انتخاب کنید")
-    if start is None:
-        return
-    goal = choose_station(graph, "ایستگاه مقصد را انتخاب کنید")
-    if goal is None:
-        return
-    criterion = prompt_criterion()
-
-    result = compare_expanded_nodes(graph, start, goal, criterion)
-    uni = result["unidirectional"]
-    bi = result["bidirectional"]
-
-    print_header("مقایسه‌ی Dijkstra یک‌طرفه و دوطرفه")
-    print(f"\nDijkstra یک‌طرفه : هزینه={uni['cost']:.2f}   گره‌های بازشده={uni['expanded_nodes']}")
-    print(f"Dijkstra دوطرفه  : هزینه={bi['cost']:.2f}   گره‌های بازشده={bi['expanded_nodes']}")
-    print(f"\nهزینه‌ها برابرند؟ {'✅ بله (درستی الگوریتم تأیید شد)' if result['costs_match'] else '❌ خیر!'}")
-
-    if bi["expanded_nodes"] < uni["expanded_nodes"]:
-        saved = uni["expanded_nodes"] - bi["expanded_nodes"]
-        print(f"جست‌وجوی دوطرفه {saved} گره کمتر باز کرد.")
-    pause()
-
-
-def round5_menu(graph: Graph) -> None:
-    options = ["مقایسه‌ی Dijkstra یک‌طرفه و دوطرفه"]
-    while True:
-        print_menu("دور پنجم: نوآوری (امتیازی)", options)
-        choice = prompt_choice(len(options))
-        if choice == 0:
-            return
-        if choice == 1:
-            round5_bidirectional(graph)
-
-
-# ======================================================================
-# منوی اصلی
-# ======================================================================
-def load_system() -> Graph:
-    graph = build_graph_from_files(STATIONS_PATH, EDGES_PATH)
-    apply_capacities_from_file(graph, CAPACITY_PATH)
-    return graph
-
-
-def main() -> None:
-    print_header("سامانه‌ی مسیریابی متروی قم  -  UrbanPulse Technical Study")
-    print("\nدر حال بارگذاری داده‌های شبکه...")
-    graph = load_system()
-    print(f"✅ {graph.num_stations()} ایستگاه و {graph.num_edges()} مسیر با موفقیت بارگذاری شد.")
-
-    main_options = [
-        "دور اول: پذیرش اولیه (مسیریابی پایه)",
-        "دور دوم: طراحی زیرساخت‌ها (MST / خط اکسپرس / چرخه‌ی منفی)",
-        "دور سوم: عملیات‌های روزانه‌ی مترو",
-        "دور چهارم: تحلیل و ارزیابی عملکرد شبکه",
-        "دور پنجم: نوآوری (امتیازی)",
-    ]
-
-    while True:
-        print_menu("منوی اصلی", main_options)
-        choice = prompt_choice(len(main_options))
-        if choice == 0:
-            print("\nخداحافظ 👋")
-            return
-        if choice == 1:
-            round1_menu(graph)
-        elif choice == 2:
-            round2_menu(graph)
-        elif choice == 3:
-            round3_menu(graph)
-        elif choice == 4:
-            round4_menu(graph)
-        elif choice == 5:
-            round5_menu(graph)
-
-
-if __name__ == "__main__":
-    try:
-        main()
-    except KeyboardInterrupt:
-        print("\n\nبرنامه توسط کاربر متوقف شد.")
+    return {
+        "passenger_count": len(result),
+        "num_gates": req.num_gates,
+        "service_time_seconds": req.service_time_seconds,
+        "duration_minutes": req.duration_minutes,
+        "average_waiting_time_minutes": (GateSimulator.average_waiting_time(result)),
+        "max_waiting_time_minutes": (GateSimulator.max_waiting_time(result)),
+        "passengers": [
+            {
+                "passenger_id": passenger.passenger_id,
+                "arrival_time": passenger.arrival_time,
+                "service_start_time": passenger.service_start_time,
+                "service_end_time": passenger.service_end_time,
+                "waiting_time": passenger.waiting_time,
+            }
+            for passenger in result
+        ],
+    }

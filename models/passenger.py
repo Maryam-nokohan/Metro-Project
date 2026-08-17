@@ -5,7 +5,6 @@ from typing import Optional
 
 @dataclass
 class Passenger:
-
     passenger_id: int
     arrival_time: float
     service_start_time: Optional[float] = None
