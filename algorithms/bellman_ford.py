@@ -1,5 +1,3 @@
-# algorithms/bellman_ford.py
-
 from typing import Dict, List, Optional, Tuple
 
 from models.graph import Graph
@@ -64,10 +62,7 @@ def bellman_ford(
     if not graph.has_station(start):
         return {}, {}, []
 
-    dist = {
-        station_id: float("inf")
-        for station_id in graph.station_ids()
-    }
+    dist = {station_id: float("inf") for station_id in graph.station_ids()}
 
     parent: Dict[str, str] = {}
 

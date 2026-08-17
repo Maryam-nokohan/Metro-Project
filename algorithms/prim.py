@@ -1,5 +1,3 @@
-# algorithms/prim.py
-
 import heapq
 import itertools
 from dataclasses import dataclass
@@ -21,9 +19,7 @@ def prim(
     criterion: str = "distance",
 ) -> MSTResult:
     if graph.directed:
-        raise ValueError(
-            "Prim برای گراف بدون جهت استفاده می‌شود."
-        )
+        raise ValueError("Prim برای گراف بدون جهت استفاده می‌شود.")
 
     station_ids = graph.station_ids()
 
@@ -34,9 +30,7 @@ def prim(
         start = station_ids[0]
 
     if not graph.has_station(start):
-        raise ValueError(
-            f"ایستگاه شروع وجود ندارد: {start}"
-        )
+        raise ValueError(f"ایستگاه شروع وجود ندارد: {start}")
 
     visited = {start}
     heap = []
@@ -65,9 +59,7 @@ def prim(
         mst.append(edge)
         total += cost
 
-        for next_edge in graph.neighbors(
-            edge.destination
-        ):
+        for next_edge in graph.neighbors(edge.destination):
             if next_edge.destination not in visited:
                 heapq.heappush(
                     heap,
@@ -79,9 +71,7 @@ def prim(
                 )
 
     if len(visited) != len(station_ids):
-        raise ValueError(
-            "گراف متصل نیست؛ بنابراین MST کامل وجود ندارد."
-        )
+        raise ValueError("گراف متصل نیست؛ بنابراین MST کامل وجود ندارد.")
 
     return MSTResult(
         edges=mst,

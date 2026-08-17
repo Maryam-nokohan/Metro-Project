@@ -1,5 +1,3 @@
-# algorithms/dag_shortest_path.py
-
 from collections import deque
 from typing import Dict, List, Optional, Tuple
 
@@ -19,20 +17,13 @@ def topological_sort(
     if not graph.directed:
         return None
 
-    indegree = {
-        station_id: 0
-        for station_id in graph.station_ids()
-    }
+    indegree = {station_id: 0 for station_id in graph.station_ids()}
 
     for station_id in graph.station_ids():
         for edge in graph.neighbors(station_id):
             indegree[edge.destination] += 1
 
-    queue = deque(
-        station_id
-        for station_id, degree in indegree.items()
-        if degree == 0
-    )
+    queue = deque(station_id for station_id, degree in indegree.items() if degree == 0)
 
     order: List[str] = []
 
@@ -58,26 +49,17 @@ def dag_shortest_path(
     criterion: str = "distance",
 ) -> Tuple[Dict[str, float], Dict[str, str]]:
     if not graph.directed:
-        raise ValueError(
-            "Shortest path by DAG algorithm requires a directed graph."
-        )
+        raise ValueError("Shortest path by DAG algorithm requires a directed graph.")
 
     if not graph.has_station(start):
-        raise ValueError(
-            f"ایستگاه مبدأ وجود ندارد: {start}"
-        )
+        raise ValueError(f"ایستگاه مبدأ وجود ندارد: {start}")
 
     order = topological_sort(graph)
 
     if order is None:
-        raise ValueError(
-            "گراف دارای دور است و DAG نیست."
-        )
+        raise ValueError("گراف دارای دور است و DAG نیست.")
 
-    dist = {
-        station_id: float("inf")
-        for station_id in graph.station_ids()
-    }
+    dist = {station_id: float("inf") for station_id in graph.station_ids()}
 
     parent: Dict[str, str] = {}
 

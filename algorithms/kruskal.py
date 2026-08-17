@@ -1,5 +1,3 @@
-# algorithms/kruskal.py
-
 from dataclasses import dataclass
 from typing import List
 
@@ -19,9 +17,7 @@ def kruskal(
     criterion: str = "distance",
 ) -> MSTResult:
     if graph.directed:
-        raise ValueError(
-            "Kruskal برای گراف بدون جهت استفاده می‌شود."
-        )
+        raise ValueError("Kruskal برای گراف بدون جهت استفاده می‌شود.")
 
     stations = graph.station_ids()
 
@@ -53,9 +49,7 @@ def kruskal(
                 break
 
     if len(mst) != len(stations) - 1:
-        raise ValueError(
-            "گراف متصل نیست؛ بنابراین MST کامل وجود ندارد."
-        )
+        raise ValueError("گراف متصل نیست؛ بنابراین MST کامل وجود ندارد.")
 
     return MSTResult(
         edges=mst,

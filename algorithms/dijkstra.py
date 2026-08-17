@@ -3,7 +3,6 @@ from typing import Dict, List, Optional, Tuple
 
 from models.graph import Graph
 
-
 VALID_CRITERIA = ("distance", "time")
 
 

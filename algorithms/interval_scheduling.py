@@ -1,5 +1,3 @@
-# algorithms/interval_scheduling.py
-
 from typing import List
 
 from models.train import Train
@@ -27,9 +25,7 @@ def select_max_trains(
 
     for train in trains:
         if train.arrival_time > train.departure_time:
-            raise ValueError(
-                f"بازه زمانی قطار {train.train_id} نامعتبر است."
-            )
+            raise ValueError(f"بازه زمانی قطار {train.train_id} نامعتبر است.")
 
     sorted_trains = sorted(
         trains,
